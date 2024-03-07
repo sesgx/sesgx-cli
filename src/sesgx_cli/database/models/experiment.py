@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from sesgx_cli.topic_extraction.docs import create_docs
-from sesgx_cli.word_enrichment.enrichment_text import create_enrichment_text
 from sqlalchemy import (
     ForeignKey,
     Text,
@@ -13,6 +11,9 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+
+from sesgx_cli.topic_extraction.docs import create_docs
+from sesgx_cli.word_enrichment.enrichment_text import create_enrichment_text
 
 from .association_tables import experiment_qgs
 from .base import Base

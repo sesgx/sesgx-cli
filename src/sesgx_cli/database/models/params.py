@@ -1,9 +1,6 @@
 from itertools import product
 from typing import TYPE_CHECKING, Optional
 
-from sesgx_cli.experiment_config import ExperimentConfig
-from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
-from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
@@ -17,6 +14,10 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+
+from sesgx_cli.experiment_config import ExperimentConfig
+from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
+from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 
 from .base import Base
 from .bertopic_params import BERTopicParams
@@ -103,7 +104,7 @@ class Params(Base):
         cls,
         experiment_id: int,
         formulation_params_id: int,
-        generator: str,
+        word_enrichment_strategy: str,
         session: Session,
         bertopic_params_id: int | None = None,
         lda_params_id: int | None = None,
@@ -111,7 +112,7 @@ class Params(Base):
         stmt = select(Params).where(
             Params.experiment_id == experiment_id,
             Params.formulation_params_id == formulation_params_id,
-            Params.word_enrichment_strategy == generator,
+            Params.word_enrichment_strategy == word_enrichment_strategy,
         )
 
         if bertopic_params_id is not None:
