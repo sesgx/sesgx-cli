@@ -3,21 +3,13 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "package-name"
+name = "sesgx-cli"
 version = "0.0.1"
 requires-python = ">= 3.9"
-description = ""
+description = "CLI to perform experiments with the SeSG framework."
 readme = "README.md"
 license = { file = "LICENSE" }
-keywords = []
-
-# TESTS-SECTION
-# [project.optional-dependencies]
-# dev-test = ["pytest==8.0.2", "pytest-cov==4.1.0"]
-
-# [tool.pytest.ini_options]
-# pythonpath = "."
-# addopts = "--doctest-modules"
+keywords = ["cli", "sesg"]
 
 [tool.ruff]
 extend-select = [
