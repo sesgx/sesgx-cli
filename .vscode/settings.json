@@ -1,0 +1,26 @@
+{
+    "files.exclude": {
+        "**/*.egg-info/": true,
+        ".pytest_cache/": true,
+        "**/__pycache__/": true,
+        "htmlcov/": true,
+        ".coverage": true,
+        "coverage.xml": true
+    },
+    "explorer.fileNesting.patterns": {
+        "pyproject.toml": "README.md, .gitignore, .python-version, LICENSE",
+    },
+    "ruff.fixAll": true,
+    "ruff.importStrategy": "useBundled",
+    "ruff.lint.run": "onSave",
+    "ruff.organizeImports": true,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+    "python.analysis.autoImportCompletions": false,
+}
