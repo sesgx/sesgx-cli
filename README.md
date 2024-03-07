@@ -23,3 +23,15 @@ Install the project in editable mode:
 ```sh
 pip install -e .
 ```
+
+To install the optional dependencies groups, use the following command:
+
+```sh
+pip install -e ".[group-name]"
+```
+
+For example, if you want to install `lda-topic-extraction` and `bert-word-enrichment`, run the following command:
+
+```sh
+pip install -e ".[lda-topic-extraction,bert-word-enrichment]"
+```
