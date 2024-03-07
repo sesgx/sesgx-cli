@@ -1,4 +1,4 @@
-"""Generate similar words using BERT."""
+"""Perform word enrichment using BERT."""
 
 from dataclasses import dataclass
 from typing import Any, List
@@ -34,10 +34,10 @@ def check_is_bert_oov_word(
 
 @dataclass
 class BertWordEnrichmentStrategy(WordEnrichmentModel):
-    """Generate similar words using BERT.
+    """Perform word enrichment using BERT.
 
     Attributes:
-        enrichment_text (str): Text that will be used to find similar words.
+        enrichment_text (str): Text that will be used to find the context for the word enrichment.
         bert_tokenizer (Any): A BERT tokenizer. For example, `BertTokenizer.from_pretrained("bert-base-uncased")`.
         bert_model (Any): A BERT model. For example, `BertForMaskedLM.from_pretrained("bert-base-uncased")`.
     """  # noqa: E501
@@ -132,7 +132,7 @@ class BertWordEnrichmentStrategy(WordEnrichmentModel):
 
         tokens_after_stemming = filter_with_stemming(
             word,
-            similar_words_list=tokens_without_oov_words,
+            enriched_words_list=tokens_without_oov_words,
         )
 
         return tokens_after_stemming

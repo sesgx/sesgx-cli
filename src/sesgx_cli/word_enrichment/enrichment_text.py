@@ -38,7 +38,7 @@ def create_enrichment_text(
         ...     EnrichmentStudy(title="title2", abstract="abstract2 \r\ntext"),
         ...     EnrichmentStudy(title="title3", abstract="abstract3"),
         ... ]
-        >>> BertSimilarWordsGenerator.create_enrichment_text(studies_list=studies)
+        >>> create_enrichment_text(studies_list=studies)
         'title1 abstract1\ntitle2 abstract2 #.text\ntitle3 abstract3\n'
     """  # noqa: E501
     enrichment_text = ""
