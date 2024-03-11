@@ -34,7 +34,7 @@ class EnrichedWordsCacheKey(Base):
     word: Mapped[str] = mapped_column(Text())
 
     cached_enriched_words_list: Mapped[list["CachedEnrichedWords"]] = relationship(
-        back_populates="enriched_words_cache_keys",
+        back_populates="enriched_words_cache_key",
         default_factory=list,
     )
 

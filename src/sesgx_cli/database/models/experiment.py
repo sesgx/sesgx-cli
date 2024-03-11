@@ -48,7 +48,7 @@ class Experiment(Base):
         default_factory=list,
     )
 
-    enriched_words_cache_key: Mapped[list["EnrichedWordsCacheKey"]] = relationship(
+    enriched_words_cache_keys: Mapped[list["EnrichedWordsCacheKey"]] = relationship(
         back_populates="experiment",
         default_factory=list,
     )
