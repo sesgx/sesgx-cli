@@ -1,4 +1,3 @@
-from itertools import product
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
@@ -15,9 +14,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from sesgx_cli.experiment_config import ExperimentConfig
 from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
-from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 
 from .base import Base
 from .bertopic_params import BERTopicParams
@@ -42,15 +39,22 @@ class Params(Base):
     )
     experiment: Mapped["Experiment"] = relationship(
         back_populates="params_list",
-        default=None,
-        init=False,
     )
 
     formulation_params_id: Mapped[int] = mapped_column(
         ForeignKey("formulation_params.id"),
+        nullable=False,
     )
     formulation_params: Mapped["FormulationParams"] = relationship(
         back_populates="params",
+    )
+
+    search_string_id: Mapped[int] = mapped_column(
+        ForeignKey("search_string.id"),
+        nullable=False,
+    )
+    search_string: Mapped["SearchString"] = relationship(
+        back_populates="params_list",
     )
 
     lda_params_id: Mapped[Optional[int]] = mapped_column(
@@ -71,16 +75,6 @@ class Params(Base):
     bertopic_params: Mapped[Optional["BERTopicParams"]] = relationship(
         back_populates="params",
         default=None,
-    )
-
-    search_string_id: Mapped[int] = mapped_column(
-        ForeignKey("search_string.id"),
-        nullable=False,
-        init=False,
-    )
-    search_string: Mapped["SearchString"] = relationship(
-        back_populates="params_list",
-        init=False,
     )
 
     __table_args__ = (
@@ -105,6 +99,7 @@ class Params(Base):
         experiment_id: int,
         formulation_params_id: int,
         word_enrichment_strategy: str,
+        topic_extraction_strategy: TopicExtractionStrategy,
         session: Session,
         bertopic_params_id: int | None = None,
         lda_params_id: int | None = None,
@@ -115,99 +110,105 @@ class Params(Base):
             Params.word_enrichment_strategy == word_enrichment_strategy,
         )
 
-        if bertopic_params_id is not None:
+        if (
+            topic_extraction_strategy.value == TopicExtractionStrategy.bertopic
+            and bertopic_params_id is not None
+        ):
             stmt = stmt.where(Params.bertopic_params_id == bertopic_params_id)
 
-        if lda_params_id is not None:
+        if (
+            topic_extraction_strategy.value == TopicExtractionStrategy.lda
+            and lda_params_id is not None
+        ):
             stmt = stmt.where(Params.lda_params_id == lda_params_id)
 
         return session.execute(stmt).scalar_one_or_none()
 
-    @classmethod
-    def create_with_lda_params(
-        cls,
-        formulation_params_list: list[FormulationParams],
-        lda_params_list: list[LDAParams],
-        experiment_id: int,
-        word_enrichment_strategy: str,
-    ):
-        return [
-            Params(
-                experiment_id=experiment_id,
-                lda_params=lda_params,
-                lda_params_id=lda_params.id,
-                formulation_params=formulation_params,
-                formulation_params_id=formulation_params.id,
-                word_enrichment_strategy=word_enrichment_strategy,
-            )
-            for lda_params, formulation_params in product(
-                lda_params_list,
-                formulation_params_list,
-            )
-        ]
+    # @classmethod
+    # def create_with_lda_params(
+    #     cls,
+    #     formulation_params_list: list[FormulationParams],
+    #     lda_params_list: list[LDAParams],
+    #     experiment_id: int,
+    #     word_enrichment_strategy: str,
+    # ):
+    #     return [
+    #         Params(
+    #             experiment_id=experiment_id,
+    #             lda_params=lda_params,
+    #             lda_params_id=lda_params.id,
+    #             formulation_params=formulation_params,
+    #             formulation_params_id=formulation_params.id,
+    #             word_enrichment_strategy=word_enrichment_strategy,
+    #         )
+    #         for lda_params, formulation_params in product(
+    #             lda_params_list,
+    #             formulation_params_list,
+    #         )
+    #     ]
 
-    @classmethod
-    def create_with_bertopic_params(
-        cls,
-        formulation_params_list: list[FormulationParams],
-        bertopic_params_list: list[BERTopicParams],
-        experiment_id: int,
-        word_enrichment_strategy: str,
-    ):
-        return [
-            Params(
-                experiment_id=experiment_id,
-                bertopic_params=bertopic_params,
-                bertopic_params_id=bertopic_params.id,
-                formulation_params=formulation_params,
-                formulation_params_id=formulation_params.id,
-                word_enrichment_strategy=word_enrichment_strategy,
-            )
-            for bertopic_params, formulation_params in product(
-                bertopic_params_list,
-                formulation_params_list,
-            )
-        ]
+    # @classmethod
+    # def create_with_bertopic_params(
+    #     cls,
+    #     formulation_params_list: list[FormulationParams],
+    #     bertopic_params_list: list[BERTopicParams],
+    #     experiment_id: int,
+    #     word_enrichment_strategy: str,
+    # ):
+    #     return [
+    #         Params(
+    #             experiment_id=experiment_id,
+    #             bertopic_params=bertopic_params,
+    #             bertopic_params_id=bertopic_params.id,
+    #             formulation_params=formulation_params,
+    #             formulation_params_id=formulation_params.id,
+    #             word_enrichment_strategy=word_enrichment_strategy,
+    #         )
+    #         for bertopic_params, formulation_params in product(
+    #             bertopic_params_list,
+    #             formulation_params_list,
+    #         )
+    #     ]
 
-    @classmethod
-    def create_with_strategy(
-        cls,
-        topic_extraction_strategy: "TopicExtractionStrategy",
-        word_enrichment_strategy: "WordEnrichmentStrategy",
-        config: ExperimentConfig,
-        experiment_id: int,
-        session: Session,
-    ):
-        formulation_params_list = FormulationParams.get_or_save_from_params_product(
-            n_enrichments_per_word_list=config.formulation_params.n_enrichments_per_word,
-            n_words_per_topic_list=config.formulation_params.n_words_per_topic,
-            session=session,
-        )
+    # @classmethod
+    # def create_with_strategy(
+    #     cls,
+    #     topic_extraction_strategy: "TopicExtractionStrategy",
+    #     word_enrichment_strategy: "WordEnrichmentStrategy",
+    #     config: ExperimentConfig,
+    #     experiment_id: int,
+    #     session: Session,
+    # ):
+    #     formulation_params_list = FormulationParams.get_or_save_from_params_product(
+    #         n_enrichments_per_word_list=config.formulation_params.n_enrichments_per_word,
+    #         n_words_per_topic_list=config.formulation_params.n_words_per_topic,
+    #         session=session,
+    #     )
 
-        if topic_extraction_strategy == TopicExtractionStrategy.bertopic:
-            model_params_list = BERTopicParams.get_or_save_from_params_product(  # noqa: E501
-                kmeans_n_clusters_list=config.bertopic_params.kmeans_n_clusters,
-                umap_n_neighbors_list=config.bertopic_params.umap_n_neighbors,
-                session=session,
-            )
+    #     if topic_extraction_strategy == TopicExtractionStrategy.bertopic:
+    #         model_params_list = BERTopicParams.get_or_save_from_params_product(  # noqa: E501
+    #             kmeans_n_clusters_list=config.bertopic_params.kmeans_n_clusters,
+    #             umap_n_neighbors_list=config.bertopic_params.umap_n_neighbors,
+    #             session=session,
+    #         )
 
-            return cls.create_with_bertopic_params(
-                formulation_params_list=formulation_params_list,
-                bertopic_params_list=model_params_list,
-                experiment_id=experiment_id,
-                word_enrichment_strategy=word_enrichment_strategy.value,
-            )
+    #         return cls.create_with_bertopic_params(
+    #             formulation_params_list=formulation_params_list,
+    #             bertopic_params_list=model_params_list,
+    #             experiment_id=experiment_id,
+    #             word_enrichment_strategy=word_enrichment_strategy.value,
+    #         )
 
-        elif topic_extraction_strategy == TopicExtractionStrategy.lda:
-            model_params_list = LDAParams.get_or_save_from_params_product(
-                n_topics_list=config.lda_params.n_topics,
-                min_document_frequency_list=config.lda_params.min_document_frequency,
-                session=session,
-            )
+    #     elif topic_extraction_strategy == TopicExtractionStrategy.lda:
+    #         model_params_list = LDAParams.get_or_save_from_params_product(
+    #             n_topics_list=config.lda_params.n_topics,
+    #             min_document_frequency_list=config.lda_params.min_document_frequency,
+    #             session=session,
+    #         )
 
-            return cls.create_with_lda_params(
-                formulation_params_list=formulation_params_list,
-                lda_params_list=model_params_list,
-                experiment_id=experiment_id,
-                word_enrichment_strategy=word_enrichment_strategy.value,
-            )
+    #         return cls.create_with_lda_params(
+    #             formulation_params_list=formulation_params_list,
+    #             lda_params_list=model_params_list,
+    #             experiment_id=experiment_id,
+    #             word_enrichment_strategy=word_enrichment_strategy.value,
+    #         )

@@ -27,8 +27,6 @@ class EnrichedWordsCacheKey(Base):
     )
     experiment: Mapped["Experiment"] = relationship(
         back_populates="enriched_words_cache_keys",
-        default=None,
-        init=False,
     )
 
     word: Mapped[str] = mapped_column(Text())

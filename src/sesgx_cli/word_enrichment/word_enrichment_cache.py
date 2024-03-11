@@ -2,7 +2,11 @@ from dataclasses import dataclass
 from typing import List
 
 from sesgx import WordEnrichmentModel
-from sesgx_cli.database.models import CachedEnrichedWords, EnrichedWordsCacheKey
+from sesgx_cli.database.models import (
+    CachedEnrichedWords,
+    EnrichedWordsCacheKey,
+    Experiment,
+)
 from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -13,13 +17,14 @@ class WordEnrichmentCache(WordEnrichmentModel):
     word_enrichment_model: WordEnrichmentModel
     word_enrichment_strategy: WordEnrichmentStrategy
     session: Session
-    experiment_id: int
+    experiment: Experiment
+    n_enrichments: int
 
     def get_from_cache(self, key: str) -> list[str] | None:
         stmt = (
             select(EnrichedWordsCacheKey)
             .options(joinedload(EnrichedWordsCacheKey.cached_enriched_words_list))
-            .where(EnrichedWordsCacheKey.experiment_id == self.experiment_id)
+            .where(EnrichedWordsCacheKey.experiment_id == self.experiment.id)
             .where(EnrichedWordsCacheKey.word == key)
             .where(
                 EnrichedWordsCacheKey.word_enrichment_strategy
@@ -36,7 +41,8 @@ class WordEnrichmentCache(WordEnrichmentModel):
 
     def save_on_cache(self, key: str, value: list[str]) -> None:
         s = EnrichedWordsCacheKey(
-            experiment_id=self.experiment_id,
+            experiment_id=self.experiment.id,
+            experiment=self.experiment,
             word_enrichment_strategy=self.word_enrichment_strategy.value,
             word=key,
             cached_enriched_words_list=[
@@ -51,12 +57,11 @@ class WordEnrichmentCache(WordEnrichmentModel):
         self.session.commit()
 
     def enrich(self, word: str) -> List[str]:
-        similar_words = self.get_from_cache(word)
-        if similar_words is not None:
-            return similar_words
+        enriched_words = self.get_from_cache(word)
+        if enriched_words is None:
+            enriched_words = self.word_enrichment_model.enrich(word)
+            self.save_on_cache(word, enriched_words)
 
-        similar_words = self.word_enrichment_model.enrich(word)
+        enriched_words_reduced = enriched_words[: self.n_enrichments]
 
-        self.save_on_cache(word, similar_words)
-
-        return similar_words
+        return enriched_words_reduced

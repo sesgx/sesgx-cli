@@ -3,9 +3,13 @@ from importlib import import_module
 from pathlib import Path
 
 import typer
-from numba.core.errors import NumbaDeprecationWarning
 
-warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
+try:
+    from numba.core.errors import NumbaDeprecationWarning
+
+    warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
+except:  # noqa: E722
+    pass
 
 
 def _include_cli_apps(app: typer.Typer):

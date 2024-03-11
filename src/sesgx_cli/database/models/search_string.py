@@ -35,7 +35,7 @@ class SearchString(Base):
     )
 
     @classmethod
-    def get_or_create_by_string(
+    def get_or_save_by_string(
         cls,
         string: str,
         session: Session,
@@ -48,6 +48,10 @@ class SearchString(Base):
             search_string = SearchString(
                 string=string,
             )
+
+            session.add(search_string)
+            session.commit()
+            session.refresh(search_string)
 
         return search_string
 

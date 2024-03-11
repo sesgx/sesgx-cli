@@ -48,11 +48,16 @@ def set_pub_year_boundaries(
 class ScopusStringFormulationModel(StringFormulationModel):
     """A model for formulating a search string for Scopus."""
 
+    n_words_per_topic: int
     use_enriched_string_formulation_model: bool = False
     min_year: int | None = None
     max_year: int | None = None
 
     def formulate(self, data: List[Dict[str, List[str]]]) -> str:
+        for topic in data:
+            for _ in range(len(topic) - self.n_words_per_topic):
+                topic.popitem()
+
         if self.use_enriched_string_formulation_model:
             s = StringFormulationModelForEnrichment().formulate(data)
 
