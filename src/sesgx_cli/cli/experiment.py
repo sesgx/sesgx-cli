@@ -1,7 +1,6 @@
 from itertools import product
 from pathlib import Path
 from random import sample
-from typing import Any
 
 import typer
 from rich import print
@@ -45,15 +44,15 @@ def start(  # noqa: C901 - method too complex
     ),
     topic_extraction_strategies_list: list[TopicExtractionStrategy] = typer.Option(
         [TopicExtractionStrategy.bertopic, TopicExtractionStrategy.lda],
-        "--topic-strategy",
-        "-ste",
+        "--topic-extraction-strategy",
+        "-tes",
         help="Which topic extraction strategies to use.",
     ),
     word_enrichment_strategies_list: list[WordEnrichmentStrategy] = typer.Option(
         [WordEnrichmentStrategy.bert, WordEnrichmentStrategy.mistral],
-        "--similar-word-strategy",
-        "-sws",
-        help="Which similar word generation strategies to use.",
+        "--word-enrichment-strategy",
+        "-wes",
+        help="Which word enrichment strategies to use.",
     ),
 ):
     """Starts an experiment and generates search strings.
@@ -62,7 +61,7 @@ def start(  # noqa: C901 - method too complex
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
     from sesgx import SeSG
-    from transformers import BertForMaskedLM, BertTokenizer, logging  # type: ignore
+    from transformers import logging  # type: ignore
 
     from sesgx_cli.string_formulation.scopus_string_formulation_model import (
         ScopusStringFormulationModel,
@@ -124,25 +123,24 @@ def start(  # noqa: C901 - method too complex
                 )
 
                 n_params = len(config_params_list)
-                task_id = progress.add_task(
-                    f"Found [bright_cyan]{n_params}[/bright_cyan] parameters variations for {topic_extraction_strategy} with {word_enrichment_strategy}...",
+                progress_bar_task_id = progress.add_task(
+                    f"Found [bright_cyan]{n_params}[/bright_cyan] parameters variations for {topic_extraction_strategy.value} with {word_enrichment_strategy.value}...",
                     # noqa: E501
                     total=n_params,
                 )
 
                 if word_enrichment_strategy == WordEnrichmentStrategy.bert:
+                    from transformers import BertForMaskedLM, BertTokenizer
+
                     from sesgx_cli.word_enrichment.bert_strategy import (
                         BertWordEnrichmentStrategy,
                     )
 
-                    bert_tokenizer: Any = BertTokenizer.from_pretrained(
-                        "bert-base-uncased"
-                    )
-                    bert_model: Any = BertForMaskedLM.from_pretrained(
-                        "bert-base-uncased"
-                    )
-
-                    bert_model.eval()
+                    # instead of using composition
+                    # this part could be initialized by BertWordEnrichmentStrategy
+                    bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+                    bert_model = BertForMaskedLM.from_pretrained("bert-base-uncased")
+                    bert_model.eval()  # type: ignore
 
                     word_enrichment_model = BertWordEnrichmentStrategy(
                         enrichment_text=enrichment_text,
@@ -175,9 +173,9 @@ def start(  # noqa: C901 - method too complex
 
                 for i, params in enumerate(config_params_list):
                     progress.update(
-                        task_id,
+                        progress_bar_task_id,
                         advance=1,
-                        description=f"{topic_extraction_strategy} - {word_enrichment_strategy}: Using parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
+                        description=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}: Using parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
                         # noqa: E501
                         refresh=True,
                     )
@@ -193,8 +191,8 @@ def start(  # noqa: C901 - method too complex
 
                     if existing_params is not None:
                         progress.update(
-                            task_id,
-                            description=f"{topic_extraction_strategy} - {word_enrichment_strategy}: Skipped parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
+                            progress_bar_task_id,
+                            description=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}: Skipped parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
                             # noqa: E501
                             refresh=True,
                         )
@@ -259,4 +257,4 @@ def start(  # noqa: C901 - method too complex
                     session.add(db_search_string)
                     session.commit()
 
-                progress.remove_task(task_id)
+                progress.remove_task(progress_bar_task_id)
