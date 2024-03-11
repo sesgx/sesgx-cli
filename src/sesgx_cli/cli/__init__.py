@@ -16,7 +16,7 @@ def _include_cli_apps(app: typer.Typer):
             continue
 
         cli_module_name = path.stem
-        module = import_module(f"sesg_cli.cli.{cli_module_name}")
+        module = import_module(f"sesgx_cli.cli.{cli_module_name}")
         app.add_typer(module.app, name=cli_module_name.replace("_", "-"))
 
 
