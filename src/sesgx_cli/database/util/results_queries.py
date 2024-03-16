@@ -16,7 +16,7 @@ class ResultQuery:
     def __init__(
         self,
         slr: str,
-        ews: str,
+        wes: str,
         tes: str,
         bonus_metrics: list[str] | None = None,
         row_num: int = 1,
@@ -34,7 +34,7 @@ class ResultQuery:
         """
 
         self._results_queries: dict[str, str] = {
-            f"lda-{ews}": f"""select distinct on (ssp.search_string_id) ssp.search_string_id,
+            f"lda-{wes}": f"""select distinct on (ssp.search_string_id) ssp.search_string_id,
                         ssp.start_set_precision,
                         ssp.start_set_recall,
                         ssp.start_set_f1_score,
@@ -54,8 +54,8 @@ class ResultQuery:
                         join slr s on s.id = e.slr_id 
                         join formulation_params fp on fp.id = p.formulation_params_id
                         left join lda_params lp on lp.id = p.lda_params_id
-                    where s."name" = '{slr}' and p.similar_word_strategy = '{ews}'""",
-            f"bt-{ews}": f"""select distinct on (ssp.search_string_id) ssp.search_string_id,
+                    where s."name" = '{slr}' and p.similar_word_strategy = '{wes}'""",
+            f"bt-{wes}": f"""select distinct on (ssp.search_string_id) ssp.search_string_id,
                         ssp.start_set_precision,
                         ssp.start_set_recall,
                         ssp.start_set_f1_score,
@@ -75,11 +75,11 @@ class ResultQuery:
                         join slr s on s.id = e.slr_id 
                         join formulation_params fp on fp.id = p.formulation_params_id
                         left join bertopic_params bp on bp.id = p.bertopic_params_id
-                    where s."name" = '{slr}' and p.similar_word_strategy = '{ews}'""",
+                    where s."name" = '{slr}' and p.similar_word_strategy = '{wes}'""",
         }
 
         self._results_queries_by_row: dict[str, str] = {
-            f"lda-{ews}": f"""select 
+            f"lda-{wes}": f"""select 
                             ssp.search_string_id as search_string_id,
                             ssp.start_set_precision,
                             ssp.start_set_recall,
@@ -102,8 +102,8 @@ class ResultQuery:
                             join formulation_params fp on fp.id = p.formulation_params_id
                             left join lda_params lp on lp.id = p.lda_params_id
                         where 
-                            s."name" = '{slr}' and p.similar_word_strategy like '{ews}'""",
-            f"bt-{ews}": f"""select
+                            s."name" = '{slr}' and p.similar_word_strategy like '{wes}'""",
+            f"bt-{wes}": f"""select
                             ssp.search_string_id as search_string_id,
                             ssp.start_set_precision,
                             ssp.start_set_recall,
@@ -126,12 +126,12 @@ class ResultQuery:
                             join formulation_params fp on fp.id = p.formulation_params_id
                             left join bertopic_params bp on bp.id = p.bertopic_params_id
                         where 
-                            s."name" = '{slr}' and p.similar_word_strategy like '{ews}'""",
+                            s."name" = '{slr}' and p.similar_word_strategy like '{wes}'""",
         }
 
         self._slr: str = slr
         self._row_num: int = row_num
-        self.sws: str = ews
+        self.sws: str = wes
         self.tes: str = tes
 
         self._set_metrics(bonus_metrics)
@@ -153,7 +153,8 @@ class ResultQuery:
         Returns: the query added of the strategy base query as subquery, the order by and limit statements.
 
         """
-        strategy_query = self._results_queries.get(f"{self.tes}-{self.sws}", None)
+        strategy_query = self._results_queries.get(
+            f"{self.tes}-{self.sws}", None)
 
         if not strategy_query:
             raise StrategyBaseQueryNotImplemented()
