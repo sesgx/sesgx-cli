@@ -301,9 +301,7 @@ def start(  # noqa: C901 - method too complex
                         string_formulation_model=string_formulation_model,
                     )
 
-                    print("generating string...")
                     string = sesg.generate(docs)
-                    print("generated string")
 
                     db_search_string = SearchString.get_or_save_by_string(
                         string,
