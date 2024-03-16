@@ -1,6 +1,7 @@
 from itertools import product
 from pathlib import Path
 from random import sample
+from time import time
 
 import typer
 from rich import print
@@ -57,12 +58,20 @@ def start(  # noqa: C901 - method too complex
         "-wes",
         help="Which word enrichment strategies to use.",
     ),
+    send_telegram_report: bool = typer.Option(
+        False,
+        "--telegram-report",
+        "-tr",
+        help="Send experiment report to telegram.",
+        show_default=True,
+    )
 ):
     """Starts an experiment and generates search strings.
 
     Will only generate strings using unseen parameters from the config file. If a string was already
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
+    start_time = time()
     from sesgx import SeSG
     from transformers import logging  # type: ignore
 
@@ -74,6 +83,15 @@ def start(  # noqa: C901 - method too complex
     logging.set_verbosity_error()
 
     config = ExperimentConfig.from_toml(config_toml_path)
+
+    if send_telegram_report:
+        from sesgx_cli.telegram_report import TelegramReport
+        telegram_report = TelegramReport(
+            slr_name=slr_name,
+            experiment_name=experiment_name,
+            strategies=list(product([s.value for s in topic_extraction_strategies_list],
+                                    [s.value for s in word_enrichment_strategies_list])),
+        )
 
     with Session() as session:
         slr = SLR.get_by_name(slr_name, session)
@@ -111,6 +129,9 @@ def start(  # noqa: C901 - method too complex
 
         print("Loading tokenizer and language model...")
         print()
+
+        if send_telegram_report:
+            telegram_report.send_new_execution_report()
 
         with Progress() as progress:
             print("Retrieving strategies parameters from database...")
@@ -219,6 +240,12 @@ def start(  # noqa: C901 - method too complex
                         session=session,
                     )
 
+                    if send_telegram_report and i+1 in (n_params*0.25, n_params*0.50, n_params*0.75):
+                        telegram_report.send_progress_report(strategy=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}",
+                                                             percentage=int(
+                                                                 ((i+1)/n_params)*100),
+                                                             exec_time=time()-start_time)
+
                     if current_concatenated_params is not None:
                         progress.update(
                             progress_bar_task_id,
@@ -324,3 +351,6 @@ def start(  # noqa: C901 - method too complex
                     session.commit()
 
                 progress.remove_task(progress_bar_task_id)
+
+    if send_telegram_report:
+        telegram_report.send_finish_report(exec_time=time()-start_time)
