@@ -234,7 +234,7 @@ def start(  # noqa: C901 - method too complex
                         experiment_id=experiment.id,
                         formulation_params_id=formulation_param.id,
                         topic_extraction_strategy=topic_extraction_strategy,
-                        word_enrichment_strategy=word_enrichment_strategy.value,
+                        word_enrichment_strategy=word_enrichment_strategy,
                         bertopic_params_id=topic_param.id,
                         lda_params_id=topic_param.id,
                         session=session,
