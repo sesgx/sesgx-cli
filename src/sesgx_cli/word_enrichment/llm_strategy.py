@@ -10,6 +10,8 @@ from langchain_openai import ChatOpenAI
 from sesgx import WordEnrichmentModel
 from tenacity import retry, stop_after_attempt
 
+from .stemming_filter import filter_with_stemming
+
 _PUNCTUATION: set[str] = set(punctuation) - {"'", "-"}
 
 
@@ -78,7 +80,8 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
 
         if similar_words is None:
             similar_words = next(
-                (response[i] for i in response if isinstance(response[i], list)), None
+                (response[i]
+                 for i in response if isinstance(response[i], list)), None
             )
 
         if similar_words is None:
@@ -130,4 +133,9 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
 
         similar_words = self._invoke_model(context, word)
 
-        return similar_words
+        similar_words_after_stemming = filter_with_stemming(
+            word,
+            enriched_words_list=similar_words,
+        )
+
+        return similar_words_after_stemming

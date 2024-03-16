@@ -42,7 +42,7 @@ pip install -e ".[lda-topic-extraction,bert-word-enrichment]"
 
 #### Using Ollama for llm strategy
 
-To run llm models using Ollama please install it base on these instructions:
+To run llm models using Ollama please install it based on these instructions:
 
 - [Ollama Download](https://ollama.com/download)
 
@@ -54,7 +54,7 @@ ollama pull {model_name}
 
 > All models available [here](https://ollama.com/library).
 
-More commands acn be discovered using:
+More commands can be discovered using:
 ```sh
 ollama -h
 ```
@@ -63,7 +63,7 @@ ollama -h
 
 #### Using OpenAi models for llm strategy
 
-To use any OpenAi models it is necessary to provide a key. **This is sensible information please use .env, do not public private keys**.
+To use any OpenAi models it is necessary to provide a key. **This is sensible information please use .env, do not expose private keys**.
 
 Enter your key using "OPENAI_API_KEY" value. See [.env.example](.env.example).
 
