@@ -33,7 +33,8 @@ def set_pub_year_boundaries(
         'title("machine" and "learning") AND PUBYEAR < 2018'
     """  # noqa: E501
     if min_year is not None and max_year is not None and min_year >= max_year:
-        raise InvalidPubyearBoundariesError("Max year must be greater than min year")
+        raise InvalidPubyearBoundariesError(
+            "Max year must be greater than min year")
 
     if min_year is not None:
         string += f" AND PUBYEAR > {min_year}"
@@ -54,9 +55,6 @@ class ScopusStringFormulationModel(StringFormulationModel):
     max_year: int | None = None
 
     def formulate(self, data: List[Dict[str, List[str]]]) -> str:
-        for topic in data:
-            for _ in range(len(topic) - self.n_words_per_topic):
-                topic.popitem()
 
         if self.use_enriched_string_formulation_model:
             s = StringFormulationModelForEnrichment().formulate(data)
