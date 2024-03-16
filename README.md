@@ -1,3 +1,5 @@
+
+![test](sesgx_header.png)
 # sesgx-cli
 
 > CLI to perform experiments with the SeSG framework.
