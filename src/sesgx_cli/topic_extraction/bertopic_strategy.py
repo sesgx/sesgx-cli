@@ -77,7 +77,6 @@ class BERTopicTopicExtractionStrategy(TopicExtractionModel):
             for topic_group in topic_model.get_topics().values()
         ]
 
-        topics = reduce_number_of_words_per_topic(
-            topics, self.n_words_per_topic)
+        topics = reduce_number_of_words_per_topic(topics, self.n_words_per_topic)
 
         return topics
