@@ -153,8 +153,7 @@ class ResultQuery:
         Returns: the query added of the strategy base query as subquery, the order by and limit statements.
 
         """
-        strategy_query = self._results_queries.get(
-            f"{self.tes}-{self.sws}", None)
+        strategy_query = self._results_queries.get(f"{self.tes}-{self.sws}", None)
 
         if not strategy_query:
             raise StrategyBaseQueryNotImplemented()

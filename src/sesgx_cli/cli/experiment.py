@@ -158,11 +158,9 @@ def start(  # noqa: C901 - method too complex
                 topic_extraction_strategies_list,
             ):
                 if topic_extraction_strategy == TopicExtractionStrategy.bertopic:
-                    concatenated_params = product(
-                        bertopic_params, formulation_params)
+                    concatenated_params = product(bertopic_params, formulation_params)
                 elif topic_extraction_strategy == TopicExtractionStrategy.lda:
-                    concatenated_params = product(
-                        lda_params, formulation_params)
+                    concatenated_params = product(lda_params, formulation_params)
                 else:
                     raise RuntimeError(
                         "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"
@@ -187,10 +185,8 @@ def start(  # noqa: C901 - method too complex
 
                     # instead of using composition
                     # this part could be initialized by BertWordEnrichmentStrategy
-                    bert_tokenizer = BertTokenizer.from_pretrained(
-                        "bert-base-uncased")
-                    bert_model = BertForMaskedLM.from_pretrained(
-                        "bert-base-uncased")
+                    bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+                    bert_model = BertForMaskedLM.from_pretrained("bert-base-uncased")
                     bert_model.eval()  # type: ignore
 
                     word_enrichment_model = BertWordEnrichmentStrategy(

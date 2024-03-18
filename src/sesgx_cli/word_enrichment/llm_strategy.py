@@ -80,8 +80,7 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
 
         if similar_words is None:
             similar_words = next(
-                (response[i]
-                 for i in response if isinstance(response[i], list)), None
+                (response[i] for i in response if isinstance(response[i], list)), None
             )
 
         if similar_words is None:

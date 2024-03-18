@@ -16,8 +16,7 @@ from sesgx_cli.database.util.results_queries import ResultQuery, SideQueries
 _AVAILABLE_METRICS = ["start_set_f1_score", "bsb_recall", "sb_recall"]
 _DEFAULT_METRICS = ["start_set_precision", "start_set_recall"]
 
-app = typer.Typer(rich_markup_mode="markdown",
-                  help="Get experiments' results.")
+app = typer.Typer(rich_markup_mode="markdown", help="Get experiments' results.")
 
 
 class InvalidMetric(Exception):
@@ -31,8 +30,7 @@ def verify_metrics(metrics: list[str] | None) -> None:
 
 def _adjust_max_col_width(df: pd.DataFrame, writer: pd.ExcelWriter, sheet_name: str):
     for column in df:
-        max_col_width = max(df[column].astype(str).map(
-            len).max(), len(column))  # type: ignore
+        max_col_width = max(df[column].astype(str).map(len).max(), len(column))  # type: ignore
         col_idx = df.columns.get_loc(column)
         writer.sheets[sheet_name].set_column(col_idx, col_idx, max_col_width)
 
@@ -110,12 +108,10 @@ def save_xlsx(
     strategies: list[str],
 ):
     with Progress() as progress:
-        saving_progress = progress.add_task(
-            "[green]Saving...", total=len(results))
+        saving_progress = progress.add_task("[green]Saving...", total=len(results))
         with excel_writer:
             for i, (key, result) in enumerate(results.items()):
-                df = pd.DataFrame(
-                    data=result["data"], columns=result["columns"])
+                df = pd.DataFrame(data=result["data"], columns=result["columns"])
 
                 if "name" in df.columns:
                     cols = df.columns.tolist()
@@ -123,8 +119,7 @@ def save_xlsx(
                     cols.insert(0, "name")
                     df = df[cols]
 
-                df.to_excel(excel_writer=excel_writer,
-                            sheet_name=key, index=False)
+                df.to_excel(excel_writer=excel_writer, sheet_name=key, index=False)
                 _adjust_max_col_width(df, excel_writer, key)
 
                 progress.update(
@@ -169,8 +164,7 @@ def get_results(slr: str, metrics: list[str]) -> tuple[dict, list[str]]:
 
             strategies.append(f"{tes}-{wes}")
 
-        results.update(get_results_from_db(
-            result_query.get_qgs_query(), session))
+        results.update(get_results_from_db(result_query.get_qgs_query(), session))
 
     return results, strategies
 
