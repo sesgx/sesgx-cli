@@ -264,18 +264,6 @@ def start(  # noqa: C901 - method too complex
                         session=session,
                     )
 
-                    if send_telegram_report and i + 1 in (
-                        1,
-                        n_params * 0.25,
-                        n_params * 0.50,
-                        n_params * 0.75,
-                    ):
-                        telegram_report.send_progress_report(
-                            strategy=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}",
-                            percentage=int(((i + 1) / n_params) * 100),
-                            exec_time=time() - start_time,
-                        )
-
                     if current_concatenated_params is not None:
                         progress.update(
                             progress_bar_task_id,
@@ -388,6 +376,26 @@ def start(  # noqa: C901 - method too complex
 
                     session.add(concatenated_params)
                     session.commit()
+
+                    if send_telegram_report:
+                        if i + 1 in (
+                            1,  # 0% - of total params variations
+                            int(n_params * 0.25),  # 25%
+                            int(n_params * 0.50),  # 50%
+                            int(n_params * 0.75),  # 75%
+                        ):
+                            telegram_report.send_progress_report(
+                                strategy=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}",
+                                percentage=int(((i + 1) / n_params) * 100),
+                                exec_time=time() - start_time,
+                            )
+
+                        if i + 1 == n_params:  # 100%
+                            telegram_report.send_finish_strategy_set_report(
+                                exec_time=time() - start_time,
+                                topic_extraction_strategy=topic_extraction_strategy,
+                                word_enrichment_strategy=word_enrichment_strategy,
+                            )
 
                 progress.remove_task(progress_bar_task_id)
 
