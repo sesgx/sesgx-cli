@@ -78,6 +78,7 @@ def start(  # noqa: C901 - method too complex
     from sesgx_cli.string_formulation.scopus_string_formulation_model import (
         ScopusStringFormulationModel,
     )
+    from sesgx_cli.topic_extraction.topic_extraction_cache import TopicExtractionCache
     from sesgx_cli.word_enrichment.word_enrichment_cache import WordEnrichmentCache
 
     logging.set_verbosity_error()
@@ -293,6 +294,15 @@ def start(  # noqa: C901 - method too complex
                             # noqa: E501
                         )
 
+                    topic_extraction_model_with_cache = TopicExtractionCache(
+                        topic_extraction_model=topic_extraction_model,
+                        topic_extraction_strategy=topic_extraction_strategy,
+                        experiment=experiment,
+                        n_words_per_topic=formulation_param.n_words_per_topic,
+                        topic_param=topic_param,
+                        session=session,
+                    )
+
                     string_formulation_model = ScopusStringFormulationModel(
                         use_enriched_string_formulation_model=formulation_param.n_enrichments_per_word
                         > 0,
@@ -302,7 +312,7 @@ def start(  # noqa: C901 - method too complex
                     )
 
                     sesg = SeSG(
-                        topic_extraction_model=topic_extraction_model,
+                        topic_extraction_model=topic_extraction_model_with_cache,
                         word_enrichment_model=word_enrichment_model_with_cache,
                         string_formulation_model=string_formulation_model,
                     )
