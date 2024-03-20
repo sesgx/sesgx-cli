@@ -10,13 +10,13 @@ from sklearn.feature_extraction.text import CountVectorizer  # type: ignore
 
 def reduce_number_of_words_per_topic(
     topics: list[list[str]],
-    n_words_per_topic: int,
+    max_n_words_per_topic: int,
 ) -> list[list[str]]:
     """Reduces the number of words in each topic.
 
     Args:
         topics (list[list[str]]): List with the topics.
-        n_words_per_topic (int): Number of words to keep in each topic.
+        max_n_words_per_topic (int): Number of words to keep in each topic.
 
     Returns:
         List with the reduced topics.
@@ -25,7 +25,7 @@ def reduce_number_of_words_per_topic(
         >>> reduce_number_of_words_per_topic([["machine", "learning"], ["code", "smell"]], 1)
         [['machine'], ['code']]
     """  # noqa: E501
-    topics = [topic[:n_words_per_topic] for topic in topics]
+    topics = [topic[:max_n_words_per_topic] for topic in topics]
 
     return topics
 
@@ -34,7 +34,7 @@ def reduce_number_of_words_per_topic(
 class LDATopicExtractionStrategy(TopicExtractionModel):
     min_document_frequency: float
     n_topics: int
-    n_words_per_topic: int
+    max_n_words_per_topic: int
 
     def extract(self, docs: List[str]) -> List[List[str]]:
         vectorizer = CountVectorizer(
@@ -93,6 +93,6 @@ class LDATopicExtractionStrategy(TopicExtractionModel):
         ]  # type: ignore
 
         topics = reduce_number_of_words_per_topic(
-            topics, self.n_words_per_topic)
+            topics, self.max_n_words_per_topic)
 
         return topics
