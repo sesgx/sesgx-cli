@@ -17,6 +17,7 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .params import Params
+    from .topics_cache import TopicsExtractedCache
 
 
 class BERTopicParams(Base):
@@ -28,6 +29,11 @@ class BERTopicParams(Base):
     umap_n_neighbors: Mapped[int] = mapped_column(Integer())
 
     params: Mapped[list["Params"]] = relationship(
+        back_populates="bertopic_params",
+        default_factory=list,
+    )
+    
+    topics_extracted_cache: Mapped[list["TopicsExtractedCache"]] = relationship(
         back_populates="bertopic_params",
         default_factory=list,
     )
