@@ -33,12 +33,12 @@ bert-word-enrichment = [
     "rapidfuzz==3.6.1",
     "nltk==3.8.1",
 ]
-llm-word-enrichment = [      
-  "langchain==0.1.9",
-  "langchain-community==0.0.24",
-  "langchain-core==0.1.27",
-  "langchain-openai==0.0.8",
-  "tenacity==8.2.3"
+llm-word-enrichment = [
+    "langchain==0.1.9",
+    "langchain-community==0.0.24",
+    "langchain-core==0.1.27",
+    "langchain-openai==0.0.8",
+    "tenacity==8.2.3",
 ]
 lda-topic-extraction = ["scikit-learn==1.4.1.post1"]
 bertopic-topic-extraction = ["bertopic==0.16.0", "scikit-learn==1.4.1.post1"]
@@ -49,7 +49,7 @@ scopus = [
 ]
 fuzzy-bsb = ["fuzzy_bsb@https://github.com/sesgx/fuzzy-bsb/archive/main.zip"]
 pdf-to-text = ["pypdf2==3.0.1"]
-telegram_report = ["telebot==0.0.5"]
+telegram-report = ["telebot==0.0.5"]
 
 [tool.ruff]
 extend-select = [
