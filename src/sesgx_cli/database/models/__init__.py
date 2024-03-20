@@ -18,6 +18,7 @@ from .search_string import SearchString
 from .search_string_performance import SearchStringPerformance
 from .slr import SLR
 from .study import Study
+from .topics_cache import TopicsExtractedCache
 
 __all__ = (
     "experiment_qgs",
@@ -38,4 +39,5 @@ __all__ = (
     "SearchStringPerformance",
     "EnrichedWordsCacheKey",
     "CachedEnrichedWords",
+    "TopicsExtractedCache",
 )
