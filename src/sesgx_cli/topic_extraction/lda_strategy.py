@@ -8,10 +8,33 @@ from sklearn.decomposition import LatentDirichletAllocation  # type: ignore
 from sklearn.feature_extraction.text import CountVectorizer  # type: ignore
 
 
+def reduce_number_of_words_per_topic(
+    topics: list[list[str]],
+    n_words_per_topic: int,
+) -> list[list[str]]:
+    """Reduces the number of words in each topic.
+
+    Args:
+        topics (list[list[str]]): List with the topics.
+        n_words_per_topic (int): Number of words to keep in each topic.
+
+    Returns:
+        List with the reduced topics.
+
+    Examples:
+        >>> reduce_number_of_words_per_topic([["machine", "learning"], ["code", "smell"]], 1)
+        [['machine'], ['code']]
+    """  # noqa: E501
+    topics = [topic[:n_words_per_topic] for topic in topics]
+
+    return topics
+
+
 @dataclass
 class LDATopicExtractionStrategy(TopicExtractionModel):
     min_document_frequency: float
     n_topics: int
+    n_words_per_topic: int
 
     def extract(self, docs: List[str]) -> List[List[str]]:
         vectorizer = CountVectorizer(
@@ -68,5 +91,7 @@ class LDATopicExtractionStrategy(TopicExtractionModel):
             [feature_names[i] for i in topic.argsort()[::-1]]
             for topic in lda.components_
         ]  # type: ignore
+
+        topics = reduce_number_of_words_per_topic(topics, self.n_words_per_topic)
 
         return topics

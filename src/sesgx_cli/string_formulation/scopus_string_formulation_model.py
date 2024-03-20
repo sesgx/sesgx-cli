@@ -54,10 +54,6 @@ class ScopusStringFormulationModel(StringFormulationModel):
     max_year: int | None = None
 
     def formulate(self, data: List[Dict[str, List[str]]]) -> str:
-        for topic in data:
-            for _ in range(len(topic) - self.n_words_per_topic):
-                topic.popitem()
-
         if self.use_enriched_string_formulation_model:
             s = StringFormulationModelForEnrichment().formulate(data)
 
