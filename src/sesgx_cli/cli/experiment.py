@@ -87,11 +87,16 @@ def start(  # noqa: C901 - method too complex
 
     if send_telegram_report:
         from sesgx_cli.telegram_report import TelegramReport
+        
         telegram_report = TelegramReport(
             slr_name=slr_name,
             experiment_name=experiment_name,
-            strategies=list(product([s.value for s in topic_extraction_strategies_list],
-                                    [s.value for s in word_enrichment_strategies_list])),
+            strategies=list(
+                product(
+                    [s.value for s in topic_extraction_strategies_list],
+                    [s.value for s in word_enrichment_strategies_list],
+                )
+            ),
         )
 
     with Session() as session:
@@ -159,11 +164,9 @@ def start(  # noqa: C901 - method too complex
                 topic_extraction_strategies_list,
             ):
                 if topic_extraction_strategy == TopicExtractionStrategy.bertopic:
-                    concatenated_params = product(
-                        bertopic_params, formulation_params)
+                    concatenated_params = product(bertopic_params, formulation_params)
                 elif topic_extraction_strategy == TopicExtractionStrategy.lda:
-                    concatenated_params = product(
-                        lda_params, formulation_params)
+                    concatenated_params = product(lda_params, formulation_params)
                 else:
                     raise RuntimeError(
                         "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"
@@ -188,10 +191,8 @@ def start(  # noqa: C901 - method too complex
 
                     # instead of using composition
                     # this part could be initialized by BertWordEnrichmentStrategy
-                    bert_tokenizer = BertTokenizer.from_pretrained(
-                        "bert-base-uncased")
-                    bert_model = BertForMaskedLM.from_pretrained(
-                        "bert-base-uncased")
+                    bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+                    bert_model = BertForMaskedLM.from_pretrained("bert-base-uncased")
                     bert_model.eval()  # type: ignore
 
                     word_enrichment_model = BertWordEnrichmentStrategy(
@@ -245,11 +246,16 @@ def start(  # noqa: C901 - method too complex
                         session=session,
                     )
 
-                    if send_telegram_report and i+1 in (n_params*0.25, n_params*0.50, n_params*0.75):
-                        telegram_report.send_progress_report(strategy=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}",
-                                                             percentage=int(
-                                                                 ((i+1)/n_params)*100),
-                                                             exec_time=time()-start_time)
+                    if send_telegram_report and i + 1 in (
+                        n_params * 0.25,
+                        n_params * 0.50,
+                        n_params * 0.75,
+                    ):
+                        telegram_report.send_progress_report(
+                            strategy=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}",
+                            percentage=int(((i + 1) / n_params) * 100),
+                            exec_time=time() - start_time,
+                        )
 
                     if current_concatenated_params is not None:
                         progress.update(
@@ -367,4 +373,4 @@ def start(  # noqa: C901 - method too complex
                 progress.remove_task(progress_bar_task_id)
 
     if send_telegram_report:
-        telegram_report.send_finish_report(exec_time=time()-start_time)
+        telegram_report.send_finish_report(exec_time=time() - start_time)
