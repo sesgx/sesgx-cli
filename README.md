@@ -68,3 +68,18 @@ To use any OpenAi models it is necessary to provide a key. **This is sensible in
 Enter your key using "OPENAI_API_KEY" value. See [.env.example](.env.example).
 
 > Be aware that OpenAi api is a paid service.
+
+--- 
+### Telegram report
+
+The `sesg experiment start` command has a optional parameter name `telegram_report (-tr)`. This option enable a experiment report to be sent via telegram.
+
+1. Follow these [instructions](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a) to set a telegram bot. 
+2. Get its token and your chat id. Add these variable to your `.env` file.
+   ```python
+    TELEGRAM_TOKEN="" // bot token.
+    TELEGRAM_CHAT_ID="" // your chat id.
+    PC_SPECS="" // your hardware specs.
+   ```
+
+> Note: this works as a local bot. To only store your experiments information, such as time of execution, execution checkpoints. This is not a live server conversational bot.

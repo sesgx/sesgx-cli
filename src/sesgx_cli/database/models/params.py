@@ -15,6 +15,7 @@ from sqlalchemy.orm import (
 )
 
 from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
+from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 
 from .base import Base
 from .bertopic_params import BERTopicParams
@@ -78,7 +79,8 @@ class Params(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("lda_params_id is not null or bertopic_params_id is not null"),
+        CheckConstraint(
+            "lda_params_id is not null or bertopic_params_id is not null"),
         UniqueConstraint(
             "experiment_id",
             "formulation_params_id",
@@ -98,7 +100,7 @@ class Params(Base):
         cls,
         experiment_id: int,
         formulation_params_id: int,
-        word_enrichment_strategy: str,
+        word_enrichment_strategy: WordEnrichmentStrategy,
         topic_extraction_strategy: TopicExtractionStrategy,
         session: Session,
         bertopic_params_id: int | None = None,
@@ -107,7 +109,7 @@ class Params(Base):
         stmt = select(Params).where(
             Params.experiment_id == experiment_id,
             Params.formulation_params_id == formulation_params_id,
-            Params.word_enrichment_strategy == word_enrichment_strategy,
+            Params.word_enrichment_strategy == word_enrichment_strategy.value,
         )
 
         if (
