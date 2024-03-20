@@ -18,6 +18,7 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .params import Params
+    from .topics_cache import TopicsExtractedCache
 
 
 class LDAParams(Base):
@@ -29,6 +30,11 @@ class LDAParams(Base):
     n_topics: Mapped[int] = mapped_column(Integer())
 
     params: Mapped[list["Params"]] = relationship(
+        back_populates="lda_params",
+        default_factory=list,
+    )
+    
+    topics_extracted_cache: Mapped[list["TopicsExtractedCache"]] = relationship(
         back_populates="lda_params",
         default_factory=list,
     )

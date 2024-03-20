@@ -60,11 +60,11 @@ class BertWordEnrichmentStrategy(WordEnrichmentModel):
                 selected_sentences.append(sentence + ".")
                 break
 
-        formated_sentences = "[CLS] "
+        formatted_sentences = "[CLS] "
         for sentence in selected_sentences:
-            formated_sentences += sentence.lower() + " [SEP] "
+            formatted_sentences += sentence.lower() + " [SEP] "
 
-        tokenized_text = self.bert_tokenizer.tokenize(formated_sentences)
+        tokenized_text = self.bert_tokenizer.tokenize(formatted_sentences)
 
         # Defining the masked index equal to the word of the input.
         masked_index = 0
