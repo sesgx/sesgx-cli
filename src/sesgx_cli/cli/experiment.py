@@ -1,3 +1,4 @@
+from functools import wraps
 from itertools import product
 from pathlib import Path
 from random import sample
@@ -18,6 +19,7 @@ from sesgx_cli.database.models import (
     SearchString,
 )
 from sesgx_cli.experiment_config import ExperimentConfig
+from sesgx_cli.telegram_report import TelegramReport
 from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
 from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 
@@ -26,8 +28,29 @@ app = typer.Typer(
     help="Start an experiment for a SLR. With multiple similar words generation strategies.",
 )
 
+telegram_report = TelegramReport()
+
+
+def catch_exception():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as root_exception:
+                try:
+                    telegram_report.send_error_report(error_message=root_exception)
+                except Exception:
+                    raise root_exception
+                raise root_exception
+
+        return wrapper
+
+    return decorator
+
 
 @app.command()
+@catch_exception()
 def start(  # noqa: C901 - method too complex
     slr_name: str = typer.Argument(
         ...,
@@ -86,17 +109,11 @@ def start(  # noqa: C901 - method too complex
     config = ExperimentConfig.from_toml(config_toml_path)
 
     if send_telegram_report:
-        from sesgx_cli.telegram_report import TelegramReport
-        
-        telegram_report = TelegramReport(
+        telegram_report.set_attrs(
             slr_name=slr_name,
             experiment_name=experiment_name,
-            strategies=list(
-                product(
-                    [s.value for s in topic_extraction_strategies_list],
-                    [s.value for s in word_enrichment_strategies_list],
-                )
-            ),
+            topic_extraction_strategies_list=topic_extraction_strategies_list,
+            word_enrichment_strategies_list=word_enrichment_strategies_list,
         )
 
     with Session() as session:
