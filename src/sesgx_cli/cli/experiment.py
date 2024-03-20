@@ -246,6 +246,7 @@ def start(  # noqa: C901 - method too complex
                     )
 
                     if send_telegram_report and i + 1 in (
+                        1,
                         n_params * 0.25,
                         n_params * 0.50,
                         n_params * 0.75,
