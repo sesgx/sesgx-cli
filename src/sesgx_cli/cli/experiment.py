@@ -107,6 +107,7 @@ def start(  # noqa: C901 - method too complex
     logging.set_verbosity_error()
 
     config = ExperimentConfig.from_toml(config_toml_path)
+    max_n_words_per_topic = max(config.formulation_params.n_words_per_topic)
 
     if send_telegram_report:
         telegram_report.set_attrs(
@@ -295,7 +296,7 @@ def start(  # noqa: C901 - method too complex
                         topic_extraction_model = BERTopicTopicExtractionStrategy(
                             kmeans_n_clusters=topic_param.kmeans_n_clusters,
                             umap_n_neighbors=topic_param.umap_n_neighbors,
-                            max_n_words_per_topic=max(config.formulation_params.n_words_per_topic),
+                            max_n_words_per_topic=max_n_words_per_topic,
                         )
 
                     elif (
@@ -309,7 +310,7 @@ def start(  # noqa: C901 - method too complex
                         topic_extraction_model = LDATopicExtractionStrategy(
                             min_document_frequency=topic_param.min_document_frequency,
                             n_topics=topic_param.n_topics,
-                            max_n_words_per_topic=max(config.formulation_params.n_words_per_topic),
+                            max_n_words_per_topic=max_n_words_per_topic,
                         )
 
                     else:
