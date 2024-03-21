@@ -8,6 +8,7 @@ import typer
 from rich import print
 from rich.progress import Progress
 
+from sesgx_cli.async_typer import AsyncTyper
 from sesgx_cli.database.connection import Session
 from sesgx_cli.database.models import (
     SLR,
@@ -49,7 +50,10 @@ def catch_exception():
     return decorator
 
 
-@app.command()
+app = AsyncTyper(
+    rich_markup_mode="markdown",
+    help="Start an experiment for a SLR. With multiple similar words generation strategies.",
+)
 @catch_exception()
 def start(  # noqa: C901 - method too complex
     slr_name: str = typer.Argument(

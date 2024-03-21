@@ -6,6 +6,7 @@ import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
 
+from sesgx_cli.async_typer import AsyncTyper
 from sesgx_cli.database.connection import Session
 from sesgx_cli.database.models import (
     Experiment,
