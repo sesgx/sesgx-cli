@@ -8,6 +8,7 @@ import typer
 from rich import print
 from rich.progress import Progress
 
+from sesgx_cli.async_typer import AsyncTyper
 from sesgx_cli.database.connection import Session
 from sesgx_cli.database.models import (
     SLR,
@@ -19,27 +20,25 @@ from sesgx_cli.database.models import (
     SearchString,
 )
 from sesgx_cli.experiment_config import ExperimentConfig
-from sesgx_cli.telegram_report import TelegramReport
+from sesgx_cli.telegram_report_experiment import TelegramReportExperiment
 from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
 from sesgx_cli.word_enrichment.strategies import WordEnrichmentStrategy
 
-app = typer.Typer(
-    rich_markup_mode="markdown",
-    help="Start an experiment for a SLR. With multiple similar words generation strategies.",
-)
-
-telegram_report = TelegramReport()
+telegram_report = TelegramReportExperiment()
 
 
 def catch_exception():
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             try:
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except Exception as root_exception:
                 try:
-                    telegram_report.send_error_report(error_message=root_exception)
+                    print(f"Root exception: {root_exception}")
+                    await telegram_report.send_error_report(
+                        error_message=root_exception
+                    )
                 except Exception:
                     raise root_exception
                 raise root_exception
@@ -49,9 +48,15 @@ def catch_exception():
     return decorator
 
 
-@app.command()
+app = AsyncTyper(
+    rich_markup_mode="markdown",
+    help="Start an experiment for a SLR. With multiple similar words generation strategies.",
+)
+
+
+@app.async_command()
 @catch_exception()
-def start(  # noqa: C901 - method too complex
+async def start(  # noqa: C901 - method too complex
     slr_name: str = typer.Argument(
         ...,
         help="Name of the Systematic Literature Review",
@@ -135,6 +140,21 @@ def start(  # noqa: C901 - method too complex
             session.commit()
             session.refresh(experiment)
 
+        if send_telegram_report:
+            if experiment.telegram_message_thread_id_experiment is None:
+                await telegram_report.start_execution_report()
+                experiment.telegram_message_thread_id_experiment = (
+                    telegram_report.message_thread_id
+                )
+
+                session.add(experiment)
+                session.commit()
+                session.refresh(experiment)
+            else:
+                telegram_report.message_thread_id = (
+                    experiment.telegram_message_thread_id_experiment
+                )
+
         print(
             f"Creating QGS with size {len(experiment.qgs)} containing the following studies:"  # noqa: E501
         )
@@ -153,9 +173,6 @@ def start(  # noqa: C901 - method too complex
 
         print("Loading tokenizer and language model...")
         print()
-
-        if send_telegram_report:
-            telegram_report.send_new_execution_report()
 
         with Progress() as progress:
             print("Retrieving strategies parameters from database...")
@@ -384,14 +401,16 @@ def start(  # noqa: C901 - method too complex
                             int(n_params * 0.50),  # 50%
                             int(n_params * 0.75),  # 75%
                         ):
-                            telegram_report.send_progress_report(
+                            await telegram_report.send_progress_report(
                                 strategy=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}",
-                                percentage=int(((i + 1) / n_params) * 100),
+                                percentage=int(((i + 1) / n_params) * 100)
+                                if i != 0
+                                else 0,
                                 exec_time=time() - start_time,
                             )
 
                         if i + 1 == n_params:  # 100%
-                            telegram_report.send_finish_strategy_set_report(
+                            await telegram_report.send_finish_strategy_report(
                                 exec_time=time() - start_time,
                                 topic_extraction_strategy=topic_extraction_strategy,
                                 word_enrichment_strategy=word_enrichment_strategy,
@@ -400,4 +419,4 @@ def start(  # noqa: C901 - method too complex
                 progress.remove_task(progress_bar_task_id)
 
     if send_telegram_report:
-        telegram_report.send_finish_report(exec_time=time() - start_time)
+        await telegram_report.send_finish_report(exec_time=time() - start_time)

@@ -1,10 +1,6 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import (
-    ForeignKey,
-    Text,
-    select,
-)
+from sqlalchemy import ForeignKey, Integer, Text, select
 from sqlalchemy.orm import (
     Mapped,
     Session,
@@ -30,9 +26,23 @@ class Experiment(Base):
     __tablename__ = "experiment"
 
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
+
     name: Mapped[str] = mapped_column(Text(), unique=True)
 
     slr_id: Mapped[int] = mapped_column(ForeignKey("slr.id"))
+
+    telegram_message_thread_id_experiment: Mapped[Optional[int]] = mapped_column(
+        Integer(),
+        nullable=True,
+        init=False,
+    )
+
+    telegram_message_thread_id_scopus: Mapped[Optional[int]] = mapped_column(
+        Integer(),
+        nullable=True,
+        init=False,
+    )
+
     slr: Mapped["SLR"] = relationship(
         back_populates="experiments",
         init=False,
@@ -53,12 +63,11 @@ class Experiment(Base):
         back_populates="experiment",
         default_factory=list,
     )
-    
+
     topics_extracted_cache: Mapped[list["TopicsExtractedCache"]] = relationship(
         back_populates="experiment",
         default_factory=list,
     )
-    
 
     @classmethod
     def get_by_name(

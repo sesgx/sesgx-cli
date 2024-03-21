@@ -7,8 +7,6 @@ we will perform operations on a correlation (or citation) graph.
 from collections import defaultdict, deque
 from typing import Optional
 
-from graphviz import Digraph  # type: ignore
-
 
 def directed_adjacency_list_to_undirected(
     adjacency_list: dict[int, list[int]],
@@ -129,7 +127,7 @@ def create_citation_graph(
     adjacency_list: dict[int, list[int]],
     studies_titles: dict[int, str],
     start_set: Optional[list[int]] = None,
-) -> Digraph:
+):
     """Creates a `graphviz.Digraph` instance with the following properties.
 
     - Filled nodes: nodes on the start set.
@@ -155,6 +153,8 @@ def create_citation_graph(
         ...     format="pdf",
         ... )
     """  # noqa: E501
+    from graphviz import Digraph  # type: ignore
+
     if start_set is None:
         start_set = []
 
