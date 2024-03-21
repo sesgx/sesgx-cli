@@ -49,7 +49,7 @@ scopus = [
 ]
 fuzzy-bsb = ["fuzzy_bsb@https://github.com/sesgx/fuzzy-bsb/archive/main.zip"]
 pdf-to-text = ["pypdf2==3.0.1"]
-telegram-report = ["telebot==0.0.5"]
+telegram-report = ["python-telegram-bot==21.0.1"]
 
 [tool.ruff]
 extend-select = [
