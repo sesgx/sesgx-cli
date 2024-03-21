@@ -72,14 +72,25 @@ Enter your key using "OPENAI_API_KEY" value. See [.env.example](.env.example).
 --- 
 ### Telegram report
 
-The `sesg experiment start` command has a optional parameter name `telegram_report (-tr)`. This option enable a experiment report to be sent via telegram.
+The `sesg experiment start` and `sesg scopus search` commands has a optional parameter name `telegram_report (-tr)`. This option enable a execution report to be sent via telegram.
 
-1. Follow these [instructions](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a) to set a telegram bot. 
-2. Get its token and your chat id. Add these variable to your `.env` file.
+1. Follow these [instructions](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a) to set a telegram bot.
+   
+2. Create a group and add the bot created.
+   > Tip: make sure tour bot has the correct admin rights. Through @BotFather and set `Manage Topics` to be true. And also allow it to be added in groups.
+
+3. You can get the group chat id using this request directly in your browser:
+   ```url
+      https://api.telegram.org/bot<YourBOTToken>/getUpdates
+   ```
+4. Enable the topic feature of the group. 
+   > Tip: send a message to your newly created group, go to group info, under reactions there will be a topic slider.
+
+5. Get its token and your chat id. Add these variable to your `.env` file.
    ```python
-    TELEGRAM_TOKEN="" // bot token.
-    TELEGRAM_CHAT_ID="" // your chat id.
-    PC_SPECS="" // your hardware specs.
+      TELEGRAM_TOKEN="" // bot token.
+      TELEGRAM_CHAT_ID_EXPERIMENT="" // your chat id.
+      PC_SPECS="" // your hardware specs.
    ```
 
-> Note: this works as a local bot. To only store your experiments information, such as time of execution, execution checkpoints. This is not a live server conversational bot.
+:warning: **Note**: this works as a local bot. To only store your experiments information, such as time of execution or execution checkpoints. This is not a live server conversational bot.
