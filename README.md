@@ -79,18 +79,20 @@ The `sesg experiment start` and `sesg scopus search` commands has a optional par
 2. Create a group and add the bot created.
    > Tip: make sure tour bot has the correct admin rights. Through @BotFather and set `Manage Topics` to be true. And also allow it to be added in groups.
 
-3. You can get the group chat id using this request directly in your browser:
+3. Enable the topic feature of the group. 
+   > Tip: send a message to your newly created group, go to group info, under reactions there will be a toggle switch for the `topics` option.
+
+4. You can get the group chat id using this request directly in your browser:
    ```url
       https://api.telegram.org/bot<YourBOTToken>/getUpdates
    ```
-4. Enable the topic feature of the group. 
-   > Tip: send a message to your newly created group, go to group info, under reactions there will be a topic slider.
 
 5. Get its token and your chat id. Add these variable to your `.env` file.
    ```python
-      TELEGRAM_TOKEN="" // bot token.
-      TELEGRAM_CHAT_ID_EXPERIMENT="" // your chat id.
-      PC_SPECS="" // your hardware specs.
+      TELEGRAM_TOKEN="" # bot token.
+      TELEGRAM_CHAT_ID_EXPERIMENT="" # your chat id for the experiment chat.
+      TELEGRAM_CHAT_ID_SCOPUS="" # your chat id for the scopus chat.
+      PC_SPECS="" # your hardware specs.
    ```
 
 :warning: **Note**: this works as a local bot. To only store your experiments information, such as time of execution or execution checkpoints. This is not a live server conversational bot.
