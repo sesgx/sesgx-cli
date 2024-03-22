@@ -8,7 +8,7 @@ from langchain_core.output_parsers.json import SimpleJsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from sesgx import WordEnrichmentModel
-from tenacity import retry, stop_after_attempt
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from .stemming_filter import filter_with_stemming
 
@@ -98,7 +98,7 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
 
         return similar_words
 
-    @retry(stop=stop_after_attempt(3))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30), reraise=True)
     def _invoke_model(self, context: str, word: str) -> list[str]:
         response = self.chain.invoke(
             {
