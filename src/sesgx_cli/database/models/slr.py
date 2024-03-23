@@ -82,7 +82,11 @@ class SLR(Base):
             min_publication_year: Optional[int]
             max_publication_year: Optional[int]
 
-        with open(path, "r") as f:
+        with open(
+            path,
+            "r",
+            encoding="utf8",
+        ) as f:
             data = json.load(f)
 
         slr_json = from_dict(SLRJSONData, data)
