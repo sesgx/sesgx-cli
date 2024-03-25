@@ -19,6 +19,7 @@ from sesgx_cli.database.models import (
     Params,
     SearchString,
 )
+from sesgx_cli.env_vars import DATABASE_URL
 from sesgx_cli.experiment_config import ExperimentConfig
 from sesgx_cli.telegram_report_experiment import TelegramReportExperiment
 from sesgx_cli.topic_extraction.strategies import TopicExtractionStrategy
@@ -99,6 +100,12 @@ async def start(  # noqa: C901 - method too complex
     Will only generate strings using unseen parameters from the config file. If a string was already
     generated for this experiment using a set of parameters for the strategy, will skip it.
     """  # noqa: E501
+    typer.confirm(
+        f"Database in use: {DATABASE_URL}. Confirm?",
+        default=False,
+        abort=True,
+    )
+
     start_time = time()
     from sesgx import SeSG
     from transformers import logging  # type: ignore
