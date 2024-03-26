@@ -46,6 +46,7 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
     ):
         self.model = model
         self.prompt = prompt
+        self.json_parser = SimpleJsonOutputParser()
 
         self.llm: ChatOpenAI | Ollama
 
@@ -54,15 +55,13 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
         self.init_model()
 
     def init_model(self) -> None:
-        json_parser = SimpleJsonOutputParser()
-
         self.llm = (
             ChatOpenAI(model=self.model)
             if "gpt" in self.model
             else Ollama(model=self.model)
         )
 
-        self.chain = self.prompt | self.llm | json_parser
+        self.chain = self.prompt | self.llm
 
     @staticmethod
     def _get_similar_words(response: dict, word: str) -> list[str]:
@@ -107,6 +106,8 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
                 "word_to_be_enriched": word,
             }
         )
+
+        response = self.json_parser.parse(response.replace("\\_", " "))
 
         similar_words = self._get_similar_words(response, word)
 
