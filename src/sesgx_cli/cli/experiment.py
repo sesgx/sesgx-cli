@@ -161,6 +161,7 @@ async def start(  # noqa: C901 - method too complex
                 telegram_report.message_thread_id = (
                     experiment.telegram_message_thread_id_experiment
                 )
+                await telegram_report.resume_execution()
 
         print(
             f"Creating QGS with size {len(experiment.qgs)} containing the following studies:"  # noqa: E501

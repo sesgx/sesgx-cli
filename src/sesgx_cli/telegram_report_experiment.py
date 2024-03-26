@@ -236,3 +236,29 @@ class TelegramReportExperiment:
             message_thread_id=self.message_thread_id,
             icon_custom_emoji_id="5379748062124056162",
         )
+
+    async def resume_execution(self) -> None:
+        """
+        Resume the execution of the experiment.
+        """
+        message = (
+            f"\U0001f4acResuming <b>{self.experiment_name}</b> execution\U0001f4ac\n\n"
+            f"<b>SLR</b>: {self.slr_name}\n"
+            f"<b>Datetime</b>: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}\n"
+        )
+
+        await self._sesg_checkpoint_bot.send_message(
+            chat_id=self._chat_id,
+            text=message,
+            parse_mode="HTML",
+            message_thread_id=self.message_thread_id,
+        )
+
+        try:
+            await self._sesg_checkpoint_bot.edit_forum_topic(
+                chat_id=self._chat_id,
+                message_thread_id=self.message_thread_id,
+                icon_custom_emoji_id="5417915203100613993",
+            )
+        except Exception:
+            pass
