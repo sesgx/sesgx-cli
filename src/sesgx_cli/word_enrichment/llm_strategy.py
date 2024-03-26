@@ -107,7 +107,11 @@ class LLMWordEnrichmentStrategy(WordEnrichmentModel):
             }
         )
 
-        response = self.json_parser.parse(response.replace("\\_", " "))
+        if "gpt" in self.model:
+            response = self.json_parser.parse(response.content)
+
+        else:
+            response = self.json_parser.parse(str(response).replace("\\_", " "))
 
         similar_words = self._get_similar_words(response, word)
 
