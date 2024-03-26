@@ -99,6 +99,7 @@ async def search(
                 telegram_report.message_thread_id = (
                     experiment.telegram_message_thread_id_scopus
                 )
+                await telegram_report.resume_execution()
 
         evaluation_gs = [
             Study(
