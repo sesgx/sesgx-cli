@@ -1,7 +1,9 @@
 import asyncio
+from dataclasses import dataclass, field
 from functools import wraps
 from pathlib import Path
 from time import time
+from typing import Callable
 
 import typer
 from rich import print
@@ -17,6 +19,29 @@ from sesgx_cli.experiment_config import ExperimentConfig
 from sesgx_cli.telegram_report_scopus import TelegramReportScopus
 
 telegram_report = TelegramReportScopus()
+
+
+@dataclass
+class AsyncElapsedTimer:
+    timer_seconds: int = field(init=False, default=0)
+    task: asyncio.Task | None = field(init=False, default=None)
+    callback: Callable[[int], None]
+
+    async def _timer(self):
+        while True:
+            self.callback(self.timer_seconds)
+            await asyncio.sleep(1)
+            self.timer_seconds += 1
+
+    def start(self):
+        self.task = asyncio.create_task(self._timer())
+
+    def reset(self):
+        self.timer_seconds = 0
+
+    def stop(self):
+        if self.task is not None:
+            self.task.cancel()
 
 
 def catch_exception():
@@ -144,27 +169,20 @@ async def search(  # noqa: C901
                     "Paginating",
                 )
 
-                async def timer():
-                    """This timer is used to show the elapsed time of the request for each page.
+                def timer_callback(seconds: int):
+                    progress.update(
+                        progress_task,
+                        description=f"Elapsed {seconds} seconds",
+                    )
 
-                    This function is created inside the `search` function to have access to
-                    the `progress_task`, and the `progress` variables.
-                    """
-                    seconds = 0
-                    while True:
-                        progress.update(
-                            progress_task,
-                            description=f"Elapsed {seconds} seconds",
-                        )
-                        await asyncio.sleep(1)
-                        seconds += 1
+                timer = AsyncElapsedTimer(
+                    callback=timer_callback,
+                )
 
                 results: list[dict] = []
 
                 try:
-                    # timer needs to be created before the async loop to start counting before the
-                    # request for the page is issued
-                    timer_task = asyncio.create_task(timer())
+                    timer.start()
 
                     async for page in client.search(search_string.string):
                         progress.update(
@@ -174,13 +192,7 @@ async def search(  # noqa: C901
                         )
 
                         results.extend(page.entries)
-
-                        # stop the timer
-                        timer_task.cancel()
-
-                        # create a new timer on the end of the iteration in order to
-                        # start counting before the next issue is requested
-                        timer_task = asyncio.create_task(timer())
+                        timer.reset()
 
                     evaluation = evaluation_factory.evaluate(
                         [r["dc:title"] for r in results if "dc:title" in r]
@@ -238,6 +250,7 @@ async def search(  # noqa: C901
                 finally:
                     progress.remove_task(progress_task)
                     progress.advance(overall_task)
+                    timer.stop()
 
                 if send_telegram_report:
                     if i + 1 in (
