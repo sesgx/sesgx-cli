@@ -145,6 +145,11 @@ async def search(  # noqa: C901
                 )
 
                 async def timer():
+                    """This timer is used to show the elapsed time of the request for each page.
+
+                    This function is created inside the `search` function to have access to
+                    the `progress_task`, and the `progress` variables.
+                    """
                     seconds = 0
                     while True:
                         progress.update(
@@ -157,6 +162,8 @@ async def search(  # noqa: C901
                 results: list[dict] = []
 
                 try:
+                    # timer needs to be created before the async loop to start counting before the
+                    # request for the page is issued
                     timer_task = asyncio.create_task(timer())
 
                     async for page in client.search(search_string.string):
@@ -168,7 +175,11 @@ async def search(  # noqa: C901
 
                         results.extend(page.entries)
 
+                        # stop the timer
                         timer_task.cancel()
+
+                        # create a new timer on the end of the iteration in order to
+                        # start counting before the next issue is requested
                         timer_task = asyncio.create_task(timer())
 
                     evaluation = evaluation_factory.evaluate(
