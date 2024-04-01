@@ -1,3 +1,4 @@
+import asyncio
 from functools import wraps
 from pathlib import Path
 from time import time
@@ -28,7 +29,7 @@ def catch_exception():
                 try:
                     print(f"Root exception: {root_exception}")
                     await telegram_report.send_error_report(
-                        error_message=root_exception
+                        error_message=str(root_exception)
                     )
                 except Exception:
                     raise root_exception
@@ -44,7 +45,7 @@ app = AsyncTyper(rich_markup_mode="markdown", help="Perform Scopus searches.")
 
 @app.async_command()
 @catch_exception()
-async def search(
+async def search(  # noqa: C901
     experiment_name: str = typer.Argument(
         ...,
         help="Name of the experiment to retrieve the search strings from.",
@@ -143,9 +144,28 @@ async def search(
                     "Paginating",
                 )
 
+                async def timer():
+                    """This timer is used to show the elapsed time of the request for each page.
+
+                    This function is created inside the `search` function to have access to
+                    the `progress_task`, and the `progress` variables.
+                    """
+                    seconds = 0
+                    while True:
+                        progress.update(
+                            progress_task,
+                            description=f"Elapsed {seconds} seconds",
+                        )
+                        await asyncio.sleep(1)
+                        seconds += 1
+
                 results: list[dict] = []
 
                 try:
+                    # timer needs to be created before the async loop to start counting before the
+                    # request for the page is issued
+                    timer_task = asyncio.create_task(timer())
+
                     async for page in client.search(search_string.string):
                         progress.update(
                             progress_task,
@@ -154,6 +174,13 @@ async def search(
                         )
 
                         results.extend(page.entries)
+
+                        # stop the timer
+                        timer_task.cancel()
+
+                        # create a new timer on the end of the iteration in order to
+                        # start counting before the next issue is requested
+                        timer_task = asyncio.create_task(timer())
 
                     evaluation = evaluation_factory.evaluate(
                         [r["dc:title"] for r in results if "dc:title" in r]
