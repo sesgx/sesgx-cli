@@ -7,3 +7,4 @@ class WordEnrichmentStrategy(str, Enum):
     bert = "bert"
     mistral = "mistral"
     gpt = "gpt-3.5-turbo"
+    llama = "llama3"
