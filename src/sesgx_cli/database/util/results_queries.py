@@ -42,7 +42,7 @@ class ResultQuery:
                         ssp.sb_recall,
                         lp.min_document_frequency as min_df,
                         lp.n_topics as n_topics,
-                        fp.n_similar_words_per_word as n_similar_w,
+                        fp.n_enrichments_per_word as n_similar_w,
                         fp.n_words_per_topic as n_w_per_topic,
                         ssp.n_scopus_results as n_scopus_results,
                         ssp.n_qgs_in_scopus as n_qgs_studies_in_scopus,
@@ -54,7 +54,7 @@ class ResultQuery:
                         join slr s on s.id = e.slr_id 
                         join formulation_params fp on fp.id = p.formulation_params_id
                         left join lda_params lp on lp.id = p.lda_params_id
-                    where s."name" = '{slr}' and p.similar_word_strategy = '{wes}'""",
+                    where s."name" = '{slr}' and p.word_enrichment_strategy = '{wes}'""",
             f"bt-{wes}": f"""select distinct on (ssp.search_string_id) ssp.search_string_id,
                         ssp.start_set_precision,
                         ssp.start_set_recall,
@@ -63,7 +63,7 @@ class ResultQuery:
                         ssp.sb_recall,
                         bp.kmeans_n_clusters as n_clusters,
                         bp.umap_n_neighbors as n_neighbors,
-                        fp.n_similar_words_per_word as n_similar_w,
+                        fp.n_enrichments_per_word as n_similar_w,
                         fp.n_words_per_topic as n_w_per_topic,
                         ssp.n_scopus_results as n_scopus_results,
                         ssp.n_qgs_in_scopus as n_qgs_studies_in_scopus,
@@ -75,7 +75,7 @@ class ResultQuery:
                         join slr s on s.id = e.slr_id 
                         join formulation_params fp on fp.id = p.formulation_params_id
                         left join bertopic_params bp on bp.id = p.bertopic_params_id
-                    where s."name" = '{slr}' and p.similar_word_strategy = '{wes}'""",
+                    where s."name" = '{slr}' and p.word_enrichment_strategy = '{wes}'""",
         }
 
         self._results_queries_by_row: dict[str, str] = {
@@ -88,7 +88,7 @@ class ResultQuery:
                             ssp.sb_recall,
                             lp.min_document_frequency as min_df,
                             lp.n_topics as n_topics,
-                            fp.n_similar_words_per_word as n_similar_w,
+                            fp.n_enrichments_per_word as n_similar_w,
                             fp.n_words_per_topic as n_w_per_topic,
                             ssp.n_scopus_results as n_scopus_results,
                             ssp.n_qgs_in_scopus as n_qgs_studies_in_scopus,
@@ -102,7 +102,7 @@ class ResultQuery:
                             join formulation_params fp on fp.id = p.formulation_params_id
                             left join lda_params lp on lp.id = p.lda_params_id
                         where 
-                            s."name" = '{slr}' and p.similar_word_strategy like '{wes}'""",
+                            s."name" = '{slr}' and p.word_enrichment_strategy like '{wes}'""",
             f"bt-{wes}": f"""select
                             ssp.search_string_id as search_string_id,
                             ssp.start_set_precision,
@@ -112,7 +112,7 @@ class ResultQuery:
                             ssp.sb_recall,
                             bp.kmeans_n_clusters as n_clusters,
                             bp.umap_n_neighbors as n_neighbors,
-                            fp.n_similar_words_per_word as n_similar_w,
+                            fp.n_enrichments_per_word as n_similar_w,
                             fp.n_words_per_topic as n_w_per_topic,
                             ssp.n_scopus_results as n_scopus_results,
                             ssp.n_qgs_in_scopus as n_qgs_studies_in_scopus,
@@ -126,7 +126,7 @@ class ResultQuery:
                             join formulation_params fp on fp.id = p.formulation_params_id
                             left join bertopic_params bp on bp.id = p.bertopic_params_id
                         where 
-                            s."name" = '{slr}' and p.similar_word_strategy like '{wes}'""",
+                            s."name" = '{slr}' and p.word_enrichment_strategy like '{wes}'""",
         }
 
         self._slr: str = slr
@@ -178,9 +178,21 @@ class ResultQuery:
         result_queries: dict = {}
         result_queries[key] = self._results_queries[key]
 
+        if len(self.sws) > 4:
+            sws_reduced_name = self.sws[:3]
+        else:
+            sws_reduced_name = self.sws
+
+        if len(self.tes) > 4:
+            tes_reduced_name = self.tes[:3]
+        else:
+            tes_reduced_name = self.tes
+
         for metric in self._metrics:
             metric_reduced_name = metric.replace("start_set_", "ss_")
-            key: str = f"t10_({self.tes}-{self.sws})_{metric_reduced_name}"
+            key: str = (
+                f"t10_({tes_reduced_name}-{sws_reduced_name})_{metric_reduced_name}"
+            )
             result_queries[key] = self._generate_top_ten_query(metric)
 
         return result_queries
@@ -211,12 +223,12 @@ class SideQueries:
     def get_strategies_used_query(slr: str) -> dict[str, str]:
         enrichment_strategies_query = f"""
         select 
-            p.similar_word_strategy
+            p.word_enrichment_strategy
         from params p 
         left join experiment e ON e.id = p.experiment_id 
         left join slr s on s.id = e.slr_id 
         where s."name" like '{slr}'
-        group by p.similar_word_strategy;
+        group by p.word_enrichment_strategy;
         """
 
         topic_extract_strategies_query = f"""
