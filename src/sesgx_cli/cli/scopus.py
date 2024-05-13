@@ -8,7 +8,6 @@ from typing import Callable
 import typer
 from rich import print
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn
-from tenacity import retry, stop_after_attempt, wait_fixed
 
 from sesgx_cli.async_typer import AsyncTyper
 from sesgx_cli.database.connection import Session
@@ -71,7 +70,6 @@ app = AsyncTyper(rich_markup_mode="markdown", help="Perform Scopus searches.")
 
 @app.async_command()
 @catch_exception()
-@retry(stop=stop_after_attempt(5), wait=wait_fixed(5), reraise=True)
 async def search(  # noqa: C901
     experiment_name: str = typer.Argument(
         ...,
