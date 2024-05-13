@@ -8,7 +8,6 @@ class ReviewDoesNotExist(Exception):
 
 def get_results_from_db(
     queries: dict[str, str],
-    check_review_query: str,
     session: Session,
 ) -> dict[str, dict]:
     """
@@ -26,11 +25,6 @@ def get_results_from_db(
     """
     results: dict = {}
 
-    review_exists = session.execute(text(check_review_query)).scalar()
-
-    if not review_exists:
-        raise ReviewDoesNotExist()
-
     for query_name, query in queries.items():
         cursor = session.execute(text(query))
         exec_results = cursor.fetchall()
@@ -43,9 +37,11 @@ def get_results_from_db(
 
 
 def get_strategies_used(
-    queries: dict[str, str], check_review_query: str, session: Session
+    queries: dict[str, str],
+    check_review_query: str,
+    session: Session,
 ) -> dict[str, dict]:
-    """_summary_
+    """Retrieves the strategies used in the review.
 
     Args:
         queries: sql queries to be executed.
