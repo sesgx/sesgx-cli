@@ -37,7 +37,7 @@ class ResultQuery:
                             from search_string_performance ssp
                             left join params p on p.search_string_id = ssp.search_string_id
                             left join formulation_params fp on fp.id = p.formulation_params_id 
-                            left join lda_params lp on lp.id = p.lda_params_id
+                            join lda_params lp on lp.id = p.lda_params_id
                             left join experiment e on e.id = p.experiment_id
                             left join slr s on s.id = e.slr_id 
                             where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
@@ -62,7 +62,7 @@ class ResultQuery:
                             from search_string_performance ssp
                             left join params p on p.search_string_id = ssp.search_string_id
                             left join formulation_params fp on fp.id = p.formulation_params_id 
-                            left join bertopic_params bp on bp.id = p.bertopic_params_id 
+                            join bertopic_params bp on bp.id = p.bertopic_params_id 
                             left join experiment e on e.id = p.experiment_id
                             left join slr s on s.id = e.slr_id 
                             where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
@@ -89,17 +89,22 @@ class ResultQuery:
 
         topic_extract_strategies_query = f"""
         select 
+            res.lda,
+            res.bertopic
+        from
+            (select 
+                s.id,
             case 
-                when count(p.lda_params_id) > 0 and count(p.bertopic_params_id) = 0 then 'lda'
-                when count(p.bertopic_params_id) > 0 and count(p.lda_params_id) = 0 then 'bertopic'
-                when count(p.lda_params_id) > 0 and count(p.bertopic_params_id) > 0 then 'lda, bertopic'
-            end as topic_extraction_strategy
-        from params p 
-        left join experiment e ON e.id = p.experiment_id 
-        left join slr s on s.id = e.slr_id 
-        where s."name" like '{slr}'
-        group by p.lda_params_id, p.bertopic_params_id
-        limit 1; 
+                when count(p.lda_params_id) > 0 then 'lda'
+                end as lda,
+            case 
+                when count(p.bertopic_params_id) > 0 then 'bertopic'
+            end as bertopic
+            from params p 
+            left join experiment e ON e.id = p.experiment_id 
+            left join slr s on s.id = e.slr_id 
+            where s."name" like '{slr}'
+            group by s.id) as res; 
         """
 
         return {
