@@ -42,7 +42,7 @@ class ResultQuery:
                             left join slr s on s.id = e.slr_id 
                             where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
                             order by p.id;""",
-            f"bt-{self.wes}": f"""select
+            f"bertopic-{self.wes}": f"""select
                                 e."name",
                                 ssp.search_string_id,
                                 ssp.start_set_precision,
