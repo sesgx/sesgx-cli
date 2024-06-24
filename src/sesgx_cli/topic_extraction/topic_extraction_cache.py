@@ -25,27 +25,47 @@ class TopicExtractionCache(TopicExtractionModel):
 
     def get_from_cache(self) -> list[list[str]] | None:
         if self.topic_extraction_strategy == TopicExtractionStrategy.lda:
-            stmt = (select(TopicsExtractedCache.topics)
-                    .where(TopicsExtractedCache.experiment_id == self.experiment.id)
-                    .where(TopicsExtractedCache.lda_params_id == self.topic_param.id))
-            
+            stmt = (
+                select(TopicsExtractedCache.topics)
+                .where(TopicsExtractedCache.experiment_id == self.experiment.id)
+                .where(TopicsExtractedCache.lda_params_id == self.topic_param.id)
+            )
+
         elif self.topic_extraction_strategy == TopicExtractionStrategy.bertopic:
-            stmt = (select(TopicsExtractedCache.topics)
-                    .where(TopicsExtractedCache.experiment_id == self.experiment.id)
-                    .where(TopicsExtractedCache.bertopic_params_id == self.topic_param.id))
+            stmt = (
+                select(TopicsExtractedCache.topics)
+                .where(TopicsExtractedCache.experiment_id == self.experiment.id)
+                .where(TopicsExtractedCache.bertopic_params_id == self.topic_param.id)
+            )
+
+        elif (
+            self.topic_extraction_strategy == TopicExtractionStrategy.mistral
+            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt
+            or self.topic_extraction_strategy == TopicExtractionStrategy.llama
+        ):
+            stmt = (
+                select(TopicsExtractedCache.topics)
+                .where(TopicsExtractedCache.experiment_id == self.experiment.id)
+                .where(TopicsExtractedCache.llm_params_id == self.topic_param.id)
+            )
+
+        else:
+            raise RuntimeError(
+                f"Unexpected topic extraction strategy: {self.topic_extraction_strategy}."
+            )
 
         result = self.session.execute(stmt).scalar_one_or_none()
-        
+
         if result is None:
             return None
-        
+
         result = json.loads(result)
-        
+
         result_parsed = [value for _, value in result.items()]
 
         return result_parsed
 
-    def save_on_cache(self, topics: json) -> None:
+    def save_on_cache(self, topics: str) -> None:
         if self.topic_extraction_strategy == TopicExtractionStrategy.lda:
             s = TopicsExtractedCache(
                 experiment_id=self.experiment.id,
@@ -63,18 +83,35 @@ class TopicExtractionCache(TopicExtractionModel):
                 topics=topics,
             )
 
+        elif (
+            self.topic_extraction_strategy == TopicExtractionStrategy.mistral
+            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt
+            or self.topic_extraction_strategy == TopicExtractionStrategy.llama
+        ):
+            s = TopicsExtractedCache(
+                experiment=self.experiment,
+                experiment_id=self.experiment.id,
+                llm_params_id=self.topic_param.id,
+                llm_params=self.topic_param,
+                topics=topics,
+            )
+        else:
+            raise RuntimeError(
+                f"Unexpected topic extraction strategy: {self.topic_extraction_strategy}."
+            )
+
         self.session.add(s)
         self.session.commit()
 
-    def extract(self, docs: list[str]) -> List[str]:
+    def extract(self, docs: list[str]) -> List[List[str]]:
         topics = self.get_from_cache()
-        
+
         if topics is None:
-            topics = self.topic_extraction_model.extract(docs)            
-            
-            topics_dict = dict(enumerate(topics))            
+            topics = self.topic_extraction_model.extract(docs)
+
+            topics_dict = dict(enumerate(topics))
             self.save_on_cache(json.dumps(topics_dict))
-            
-        topics_reduced = [topic[:self.n_words_per_topic] for topic in topics]        
-        
+
+        topics_reduced = [topic[: self.n_words_per_topic] for topic in topics]
+
         return topics_reduced

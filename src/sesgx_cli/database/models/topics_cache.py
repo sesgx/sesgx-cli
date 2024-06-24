@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from .bertopic_params import BERTopicParams
     from .experiment import Experiment
     from .lda_params import LDAParams
+    from .llm_params import LLMParams
 
 
 class TopicsExtractedCache(Base):
@@ -56,10 +57,22 @@ class TopicsExtractedCache(Base):
         default=None,
     )
 
+    llm_params_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("llm_params.id"),
+        nullable=True,
+        default=None,
+    )
+
+    llm_params: Mapped[Optional["LLMParams"]] = relationship(
+        back_populates="topics_extracted_cache",
+        default=None,
+    )
     topics: Mapped[str] = mapped_column(JSONB(), nullable=False, default=None)
 
     __table_args__ = (
-        CheckConstraint("lda_params_id is not null or bertopic_params_id is not null"),
+        CheckConstraint(
+            "lda_params_id is not null or bertopic_params_id is not null or llm_params_id is not null"
+        ),
         UniqueConstraint(
             "experiment_id",
             "lda_params_id",
@@ -67,5 +80,9 @@ class TopicsExtractedCache(Base):
         UniqueConstraint(
             "experiment_id",
             "bertopic_params_id",
+        ),
+        UniqueConstraint(
+            "experiment_id",
+            "llm_params_id",
         ),
     )

@@ -61,3 +61,6 @@ unfixable = ["F841"]
 exclude = [".venv", "~/.pyenv/"]
 ignore-init-module-imports = true
 fix = true
+
+[tool.pyright]
+reportArgumentType = false

@@ -16,6 +16,7 @@ from sesgx_cli.database.models import (
     Experiment,
     FormulationParams,
     LDAParams,
+    LLMParams,
     Params,
     SearchString,
 )
@@ -196,6 +197,12 @@ async def start(  # noqa: C901 - method too complex
                 session=session,
             )
 
+            llm_params = LLMParams.get_or_save_from_params_product(
+                kmeans_n_clusters_list=config.llm_params.kmeans_n_clusters,
+                umap_n_neighbors_list=config.llm_params.umap_n_neighbors,
+                session=session,
+            )
+
             formulation_params = FormulationParams.get_or_save_from_params_product(
                 n_enrichments_per_word_list=config.formulation_params.n_enrichments_per_word,
                 n_words_per_topic_list=config.formulation_params.n_words_per_topic,
@@ -210,18 +217,28 @@ async def start(  # noqa: C901 - method too complex
                     concatenated_params = product(bertopic_params, formulation_params)
                 elif topic_extraction_strategy == TopicExtractionStrategy.lda:
                     concatenated_params = product(lda_params, formulation_params)
+                elif (
+                    topic_extraction_strategy == TopicExtractionStrategy.mistral
+                    or topic_extraction_strategy == TopicExtractionStrategy.gpt
+                    or topic_extraction_strategy == TopicExtractionStrategy.llama
+                ):
+                    concatenated_params = product(llm_params, formulation_params)
                 else:
                     raise RuntimeError(
-                        "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"
-                        # noqa: E501
+                        (
+                            "Invalid Topic Extraction Strategy or the params instance "
+                            "does not have neither a lda_params, bertopic_params, llm_params"
+                        )
                     )
 
                 concatenated_params = list(concatenated_params)
 
                 n_params = len(concatenated_params)
                 progress_bar_task_id = progress.add_task(
-                    f"Found [bright_cyan]{n_params}[/bright_cyan] parameters variations for {topic_extraction_strategy.value} with {word_enrichment_strategy.value}...",
-                    # noqa: E501
+                    (
+                        f"Found [bright_cyan]{n_params}[/bright_cyan] parameters variations for"
+                        f" {topic_extraction_strategy.value} with {word_enrichment_strategy.value}..."
+                    ),
                     total=n_params,
                 )
 
@@ -286,14 +303,17 @@ async def start(  # noqa: C901 - method too complex
                         word_enrichment_strategy=word_enrichment_strategy,
                         bertopic_params_id=topic_param.id,
                         lda_params_id=topic_param.id,
+                        llm_params_id=topic_param.id,
                         session=session,
                     )
 
                     if current_concatenated_params is not None:
                         progress.update(
                             progress_bar_task_id,
-                            description=f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}: Skipped parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]",
-                            # noqa: E501
+                            description=(
+                                f"{topic_extraction_strategy.value} - {word_enrichment_strategy.value}: "
+                                f"Skipped parameter variation [bright_cyan]{i + 1}[/] of [bright_cyan]{n_params}[/]"
+                            ),
                             refresh=True,
                         )
                         continue
@@ -326,10 +346,28 @@ async def start(  # noqa: C901 - method too complex
                             max_n_words_per_topic=max_n_words_per_topic,
                         )
 
+                    elif (
+                        topic_extraction_strategy == TopicExtractionStrategy.mistral
+                        or topic_extraction_strategy == TopicExtractionStrategy.gpt
+                        or topic_extraction_strategy == TopicExtractionStrategy.llama
+                    ) and isinstance(topic_param, LLMParams):
+                        from sesgx_cli.topic_extraction.llm_strategy import (
+                            LLMTopicExtractionStrategy,
+                        )
+
+                        topic_extraction_model = LLMTopicExtractionStrategy(
+                            kmeans_n_clusters=topic_param.kmeans_n_clusters,
+                            umap_n_neighbors=topic_param.umap_n_neighbors,
+                            max_n_words_per_topic=max_n_words_per_topic,
+                            model=topic_extraction_strategy.value,
+                        )
+
                     else:
                         raise RuntimeError(
-                            "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"
-                            # noqa: E501
+                            (
+                                "Invalid Topic Extraction Strategy or the params "
+                                "instance does not have neither a lda_params or bertopic_params"
+                            )
                         )
 
                     topic_extraction_model_with_cache = TopicExtractionCache(
@@ -374,6 +412,7 @@ async def start(  # noqa: C901 - method too complex
                             formulation_params_id=formulation_param.id,
                             formulation_params=formulation_param,
                             word_enrichment_strategy=word_enrichment_strategy.value,
+                            topic_extraction_strategy=topic_extraction_strategy.value,
                             search_string_id=db_search_string.id,
                             search_string=db_search_string,
                         )
@@ -390,13 +429,35 @@ async def start(  # noqa: C901 - method too complex
                             formulation_params_id=formulation_param.id,
                             formulation_params=formulation_param,
                             word_enrichment_strategy=word_enrichment_strategy.value,
+                            topic_extraction_strategy=topic_extraction_strategy.value,
                             search_string_id=db_search_string.id,
                             search_string=db_search_string,
                         )
+
+                    elif (
+                        topic_extraction_strategy == TopicExtractionStrategy.mistral
+                        or topic_extraction_strategy == TopicExtractionStrategy.gpt
+                        or topic_extraction_strategy == TopicExtractionStrategy.llama
+                    ) and isinstance(topic_param, LLMParams):
+                        concatenated_params = Params(
+                            experiment_id=experiment.id,
+                            experiment=experiment,
+                            llm_params_id=topic_param.id,
+                            llm_params=topic_param,
+                            formulation_params_id=formulation_param.id,
+                            formulation_params=formulation_param,
+                            word_enrichment_strategy=word_enrichment_strategy.value,
+                            topic_extraction_strategy=topic_extraction_strategy.value,
+                            search_string_id=db_search_string.id,
+                            search_string=db_search_string,
+                        )
+
                     else:
                         raise RuntimeError(
-                            "Invalid Topic Extraction Strategy or the params instance does not have neither a lda_params or bertopic_params"
-                            # noqa: E501
+                            (
+                                "Invalid Topic Extraction Strategy or the params "
+                                "instance does not have neither a lda_params or bertopic_params"
+                            )
                         )
 
                     session.add(concatenated_params)

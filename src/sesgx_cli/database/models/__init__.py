@@ -13,6 +13,7 @@ from .enriched_words_cache_key import EnrichedWordsCacheKey
 from .experiment import Experiment
 from .formulation_params import FormulationParams
 from .lda_params import LDAParams
+from .llm_params import LLMParams
 from .params import Params
 from .search_string import SearchString
 from .search_string_performance import SearchStringPerformance
@@ -40,4 +41,5 @@ __all__ = (
     "EnrichedWordsCacheKey",
     "CachedEnrichedWords",
     "TopicsExtractedCache",
+    "LLMParams",
 )

@@ -21,6 +21,7 @@ from .base import Base
 from .bertopic_params import BERTopicParams
 from .formulation_params import FormulationParams
 from .lda_params import LDAParams
+from .llm_params import LLMParams
 
 if TYPE_CHECKING:
     from .experiment import Experiment
@@ -33,6 +34,8 @@ class Params(Base):
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
 
     word_enrichment_strategy: Mapped[str] = mapped_column(String(25))
+
+    topic_extraction_strategy: Mapped[str] = mapped_column(String(25))
 
     experiment_id: Mapped[int] = mapped_column(
         ForeignKey("experiment.id"),
@@ -78,9 +81,20 @@ class Params(Base):
         default=None,
     )
 
+    llm_params_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("llm_params.id"),
+        nullable=True,
+        default=None,
+    )
+    llm_params: Mapped[Optional["LLMParams"]] = relationship(
+        back_populates="params",
+        default=None,
+    )
+
     __table_args__ = (
         CheckConstraint(
-            "lda_params_id is not null or bertopic_params_id is not null"),
+            "lda_params_id is not null or bertopic_params_id is not null or llm_params_id is not null"
+        ),
         UniqueConstraint(
             "experiment_id",
             "formulation_params_id",
@@ -91,6 +105,12 @@ class Params(Base):
             "experiment_id",
             "formulation_params_id",
             "bertopic_params_id",
+            "word_enrichment_strategy",
+        ),
+        UniqueConstraint(
+            "experiment_id",
+            "formulation_params_id",
+            "llm_params_id",
             "word_enrichment_strategy",
         ),
     )
@@ -105,6 +125,7 @@ class Params(Base):
         session: Session,
         bertopic_params_id: int | None = None,
         lda_params_id: int | None = None,
+        llm_params_id: int | None = None,
     ):
         stmt = select(Params).where(
             Params.experiment_id == experiment_id,
@@ -123,6 +144,14 @@ class Params(Base):
             and lda_params_id is not None
         ):
             stmt = stmt.where(Params.lda_params_id == lda_params_id)
+
+        if (
+            topic_extraction_strategy.value == TopicExtractionStrategy.mistral
+            or topic_extraction_strategy.value == TopicExtractionStrategy.gpt
+            or topic_extraction_strategy.value == TopicExtractionStrategy.llama
+            and llm_params_id is not None
+        ):
+            stmt = stmt.where(Params.llm_params_id == llm_params_id)
 
         return session.execute(stmt).scalar_one_or_none()
 

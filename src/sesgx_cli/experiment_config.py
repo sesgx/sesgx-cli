@@ -20,6 +20,12 @@ class BERTopicParams:
 
 
 @dataclass(frozen=True)
+class LLMParams:
+    umap_n_neighbors: List[int]
+    kmeans_n_clusters: List[int]
+
+
+@dataclass(frozen=True)
 class FormulationParams:
     n_words_per_topic: List[int]
     n_enrichments_per_word: List[int]
@@ -31,6 +37,7 @@ class ExperimentConfig:
     formulation_params: FormulationParams
     lda_params: LDAParams
     bertopic_params: BERTopicParams
+    llm_params: LLMParams
 
     @classmethod
     def from_toml(
@@ -63,6 +70,11 @@ class ExperimentConfig:
             kmeans_n_clusters=[1, 2, 3, 4, 5],
         )
 
+        llm_params = LLMParams(
+            umap_n_neighbors=[3, 5, 7],
+            kmeans_n_clusters=[1, 2, 3, 4, 5],
+        )
+
         string_formulation_params = FormulationParams(
             n_words_per_topic=[5, 6, 7, 8, 9, 10],
             n_enrichments_per_word=[0, 1, 2, 3],
@@ -73,4 +85,5 @@ class ExperimentConfig:
             formulation_params=string_formulation_params,
             lda_params=lda_params,
             bertopic_params=bertopic_params,
+            llm_params=llm_params,
         )
