@@ -19,18 +19,17 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 class Prompts:
     """
     Creates a wrapper for possibles prompts to pass to the llm model.
-    In this implementation is possible to define the amount of synonyms
-    to be generated. By default, it is 7.
     """
 
     base_prompt = {
-        "system": """You are a helpful keywords extractor. From now on consider that a keyword is a word that 
-                      can describe a document. You have to return only a JSON object and nothing more,
-                      follow this example: 'keywords':  [set, of , words].
-                      I will provide you with some documents as context so you can extract a set of keywords.""",
-        "human": """Given the following documents: {context}. Generate a set of keywords with 15 keywords.
-                      Please do not generate any more or any less than I've asked and remember to structure your reponse
-                      as a JSON object.""",
+        "system": """You are a helpful topic extractor. From now on consider that a topic is a set of descriptors words
+                    that describe a document or a set of documents. You have to return only a JSON object and nothing more,
+                    follow this example: 'keywords':  [set, of , words]. The key value for the JSON object is 'keywords'.
+                    I will provide you with some documents as context so you can extract a set of keywords.""",
+        "human": """Given the following documents: {context}. Generate a topic with 15 keywords.
+                    Please do not generate any more or any less than I've asked and remember to structure your response
+                    as a JSON object and return nothing else than a JSON. Please return only a JSON with only on pair of key-value
+                    that being 'keywords': [set, of, words].""",
     }
 
     def __init__(self, prompt_text: dict = base_prompt) -> None:  # noqa: D107
@@ -77,10 +76,7 @@ class LLMTopicExtractionStrategy(TopicExtractionModel):
 
         self.chain = self.prompt | self.llm
 
-        self.embedding_model = SentenceTransformer(
-            self.sentence_transformer_model,
-            device="cpu",
-        )
+        self.embedding_model = SentenceTransformer(self.sentence_transformer_model)
 
     def extract(self, docs: List[str]) -> List[List[str]]:
         cluster_model = KMeans(
@@ -114,14 +110,16 @@ class LLMTopicExtractionStrategy(TopicExtractionModel):
 
     @staticmethod
     def _get_topics(response: dict) -> List[str]:
-        try:
-            topics = response.get("Keywords", None)
-        except AttributeError:
-            raise RuntimeError(f"RESPONSE: {response}")
+        topics = response.get("keywords", None)
+
+        if topics is None:
+            topics = next(
+                (response[i] for i in response if isinstance(response[i], list)), None
+            )
 
         if topics is None:
             raise RuntimeError(
-                f"No topics returned or unstructured response. Reponse: {response}"
+                f"No topics returned or unstructured response. Response: {response}"
             )
 
         return topics
@@ -139,6 +137,6 @@ class LLMTopicExtractionStrategy(TopicExtractionModel):
 
         response = self.json_parser.parse(response)
 
-        topics = self._get_topics(dict(response))
+        topics = self._get_topics(response)
 
         return topics
