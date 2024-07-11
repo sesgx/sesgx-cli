@@ -29,7 +29,7 @@ class Prompts:
         "human": """Given the following documents: {context}. Generate a topic with 15 keywords.
                     Please do not generate any more or any less than I've asked and remember to structure your response
                     as a JSON object and return nothing else than a JSON. Please return only a JSON with only on pair of key-value
-                    that being 'keywords': [set, of, words].""",
+                    that being 'keywords': [set, of, words]. Remember to be generic and try to return simple words, avoid compound words.""",
     }
 
     def __init__(self, prompt_text: dict = base_prompt) -> None:  # noqa: D107
