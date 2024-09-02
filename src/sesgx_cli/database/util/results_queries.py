@@ -43,30 +43,55 @@ class ResultQuery:
                             where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
                             order by p.id;""",
             f"bertopic-{self.wes}": f"""select
-                                e."name",
-                                ssp.search_string_id,
-                                ssp.start_set_precision,
-                                ssp.start_set_recall,
-                                ssp.start_set_f1_score,
-                                ssp.sb_recall,
-                                ssp.bsb_recall,
-                                ssp.n_scopus_results,
-                                ssp.n_qgs_in_scopus,
-                                ssp.n_gs_in_scopus,
-                                ssp.n_gs_in_bsb,
-                                ssp.n_gs_in_sb,
-                                fp.n_enrichments_per_word,
-                                fp.n_words_per_topic,
-                                bp.kmeans_n_clusters,
-                                bp.umap_n_neighbors 
-                            from search_string_performance ssp
-                            left join params p on p.search_string_id = ssp.search_string_id
-                            left join formulation_params fp on fp.id = p.formulation_params_id 
-                            join bertopic_params bp on bp.id = p.bertopic_params_id 
-                            left join experiment e on e.id = p.experiment_id
-                            left join slr s on s.id = e.slr_id 
-                            where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
-                            order by p.id;""",
+                                        e."name",
+                                        ssp.search_string_id,
+                                        ssp.start_set_precision,
+                                        ssp.start_set_recall,
+                                        ssp.start_set_f1_score,
+                                        ssp.sb_recall,
+                                        ssp.bsb_recall,
+                                        ssp.n_scopus_results,
+                                        ssp.n_qgs_in_scopus,
+                                        ssp.n_gs_in_scopus,
+                                        ssp.n_gs_in_bsb,
+                                        ssp.n_gs_in_sb,
+                                        fp.n_enrichments_per_word,
+                                        fp.n_words_per_topic,
+                                        bp.kmeans_n_clusters,
+                                        bp.umap_n_neighbors 
+                                    from search_string_performance ssp
+                                    left join params p on p.search_string_id = ssp.search_string_id
+                                    left join formulation_params fp on fp.id = p.formulation_params_id 
+                                    join bertopic_params bp on bp.id = p.bertopic_params_id 
+                                    left join experiment e on e.id = p.experiment_id
+                                    left join slr s on s.id = e.slr_id 
+                                    where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
+                                    order by p.id;""",
+            f"llm-{self.wes}": f"""select
+                                    e."name",
+                                    ssp.search_string_id,
+                                    ssp.start_set_precision,
+                                    ssp.start_set_recall,
+                                    ssp.start_set_f1_score,
+                                    ssp.sb_recall,
+                                    ssp.bsb_recall,
+                                    ssp.n_scopus_results,
+                                    ssp.n_qgs_in_scopus,
+                                    ssp.n_gs_in_scopus,
+                                    ssp.n_gs_in_bsb,
+                                    ssp.n_gs_in_sb,
+                                    fp.n_enrichments_per_word,
+                                    fp.n_words_per_topic,
+                                    lp.kmeans_n_clusters as n_clusters,
+                                    lp.umap_n_neighbors as n_neighbors
+                                from search_string_performance ssp
+                                left join params p on p.search_string_id = ssp.search_string_id
+                                left join formulation_params fp on fp.id = p.formulation_params_id 
+                                join llm_params lp on lp.id = p.lda_params_id
+                                left join experiment e on e.id = p.experiment_id
+                                left join slr s on s.id = e.slr_id 
+                                where s."name" = '{self._slr}' and p.word_enrichment_strategy = '{self.wes}'
+                                order by p.id;""",
         }
 
     @staticmethod
@@ -88,23 +113,11 @@ class ResultQuery:
         """
 
         topic_extract_strategies_query = f"""
-        select 
-            res.lda,
-            res.bertopic
-        from
-            (select 
-                s.id,
-            case 
-                when count(p.lda_params_id) > 0 then 'lda'
-                end as lda,
-            case 
-                when count(p.bertopic_params_id) > 0 then 'bertopic'
-            end as bertopic
+            select distinct p.topic_extraction_strategy
             from params p 
-            left join experiment e ON e.id = p.experiment_id 
-            left join slr s on s.id = e.slr_id 
-            where s."name" like '{slr}'
-            group by s.id) as res; 
+                left join experiment e ON e.id = p.experiment_id 
+                left join slr s on s.id = e.slr_id 
+            where s."name" like '{slr}';
         """
 
         return {
@@ -154,6 +167,12 @@ class ResultQuery:
     def get_queries(self) -> dict[str, str]:
         """Get the queries to retrieve the results from each strategies used."""
 
-        key: str = f"{self.tes}-{self.wes}"
+        llms = ["mistral", "gpt-3.5-turbo", "gpt-4o-mini", "llama3"]
 
-        return {key: self._results_queries[key]}
+        if self.tes in llms:
+            if self.tes == self.wes:
+                key: str = f"llm-{self.wes}"
+                return {f"{self.tes}-{self.wes}": self._results_queries[key]}
+        else:
+            key: str = f"{self.tes}-{self.wes}"
+            return {key: self._results_queries[key]}

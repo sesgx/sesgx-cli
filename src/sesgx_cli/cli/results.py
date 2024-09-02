@@ -89,7 +89,7 @@ def get_results(slr: str) -> dict[str, dict]:
 
             stmt = result_query.get_queries()
 
-            results.update(get_results_from_db(stmt, session))
+            results.update(get_results_from_db(stmt, session)) if stmt else None
 
         results.update(get_results_from_db(ResultQuery.get_qgs_query(slr), session))
 

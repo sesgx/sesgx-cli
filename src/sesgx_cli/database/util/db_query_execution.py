@@ -60,10 +60,6 @@ def get_strategies_used(
     for query_name, query in queries.items():
         cursor = session.execute(text(query))
         exec_results = cursor.fetchall()
-
-        if query_name == "tes":
-            results[query_name] = [i for i in list(exec_results[0]) if i is not None]
-        else:
-            results[query_name] = [i[0] for i in exec_results]
+        results[query_name] = [i[0] for i in exec_results]
 
     return results
