@@ -135,7 +135,10 @@ class LLMTopicExtractionStrategy(TopicExtractionModel):
             }
         )
 
-        response = self.json_parser.parse(response)
+        if "gpt" in self.model:
+            response = self.json_parser.parse(response.content)
+        else:
+            response = self.json_parser.parse(response)
 
         topics = self._get_topics(response)
 
