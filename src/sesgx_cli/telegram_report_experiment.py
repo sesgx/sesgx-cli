@@ -170,11 +170,14 @@ class TelegramReportExperiment:
         )
 
     async def close_execution_report_topic_forum(self):
-        await self._sesg_checkpoint_bot.edit_forum_topic(
-            chat_id=self._chat_id,
-            message_thread_id=self.message_thread_id,
-            icon_custom_emoji_id="5237699328843200968",
-        )
+        try:
+            await self._sesg_checkpoint_bot.edit_forum_topic(
+                chat_id=self._chat_id,
+                message_thread_id=self.message_thread_id,
+                icon_custom_emoji_id="5237699328843200968",
+            )
+        except Exception:
+            pass
 
         await self._sesg_checkpoint_bot.close_forum_topic(
             chat_id=self._chat_id,
@@ -230,17 +233,29 @@ class TelegramReportExperiment:
             parse_mode="HTML",
             message_thread_id=self.message_thread_id,
         )
+        try:
+            await self._sesg_checkpoint_bot.edit_forum_topic(
+                chat_id=self._chat_id,
+                message_thread_id=self.message_thread_id,
+                icon_custom_emoji_id="5379748062124056162",
+            )
+        except Exception:
+            pass
 
-        await self._sesg_checkpoint_bot.edit_forum_topic(
+        await self._sesg_checkpoint_bot.close_forum_topic(
             chat_id=self._chat_id,
             message_thread_id=self.message_thread_id,
-            icon_custom_emoji_id="5379748062124056162",
         )
 
     async def resume_execution(self) -> None:
         """
         Resume the execution of the experiment.
         """
+        await self._sesg_checkpoint_bot.reopen_forum_topic(
+            chat_id=self._chat_id,
+            message_thread_id=self.message_thread_id,
+        )
+
         message = (
             f"\U0001f4acResuming <b>{self.experiment_name}</b> execution\U0001f4ac\n\n"
             f"<b>SLR</b>: {self.slr_name}\n"
