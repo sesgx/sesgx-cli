@@ -147,7 +147,8 @@ class Params(Base):
 
         if (
             topic_extraction_strategy.value == TopicExtractionStrategy.mistral
-            or topic_extraction_strategy.value == TopicExtractionStrategy.gpt
+            or topic_extraction_strategy.value == TopicExtractionStrategy.gpt3
+            or topic_extraction_strategy.value == TopicExtractionStrategy.gpt4
             or topic_extraction_strategy.value == TopicExtractionStrategy.llama
             and llm_params_id is not None
         ):

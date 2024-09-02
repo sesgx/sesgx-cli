@@ -219,7 +219,8 @@ async def start(  # noqa: C901 - method too complex
                     concatenated_params = product(lda_params, formulation_params)
                 elif (
                     topic_extraction_strategy == TopicExtractionStrategy.mistral
-                    or topic_extraction_strategy == TopicExtractionStrategy.gpt
+                    or topic_extraction_strategy == TopicExtractionStrategy.gpt3
+                    or topic_extraction_strategy == TopicExtractionStrategy.gpt4
                     or topic_extraction_strategy == TopicExtractionStrategy.llama
                 ):
                     concatenated_params = product(llm_params, formulation_params)
@@ -348,7 +349,8 @@ async def start(  # noqa: C901 - method too complex
 
                     elif (
                         topic_extraction_strategy == TopicExtractionStrategy.mistral
-                        or topic_extraction_strategy == TopicExtractionStrategy.gpt
+                        or topic_extraction_strategy == TopicExtractionStrategy.gpt3
+                        or topic_extraction_strategy == TopicExtractionStrategy.gpt4
                         or topic_extraction_strategy == TopicExtractionStrategy.llama
                     ) and isinstance(topic_param, LLMParams):
                         from sesgx_cli.topic_extraction.llm_strategy import (
@@ -436,7 +438,8 @@ async def start(  # noqa: C901 - method too complex
 
                     elif (
                         topic_extraction_strategy == TopicExtractionStrategy.mistral
-                        or topic_extraction_strategy == TopicExtractionStrategy.gpt
+                        or topic_extraction_strategy == TopicExtractionStrategy.gpt3
+                        or topic_extraction_strategy == TopicExtractionStrategy.gpt4
                         or topic_extraction_strategy == TopicExtractionStrategy.llama
                     ) and isinstance(topic_param, LLMParams):
                         concatenated_params = Params(

@@ -7,5 +7,6 @@ class TopicExtractionStrategy(str, Enum):
     lda = "lda"
     bertopic = "bertopic"
     mistral = "mistral"
-    gpt = "gpt-3.5-turbo"
+    gpt3 = "gpt-3.5-turbo"
+    gpt4 = "gpt-4o-mini"
     llama = "llama3"

@@ -40,7 +40,8 @@ class TopicExtractionCache(TopicExtractionModel):
 
         elif (
             self.topic_extraction_strategy == TopicExtractionStrategy.mistral
-            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt
+            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt3
+            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt4
             or self.topic_extraction_strategy == TopicExtractionStrategy.llama
         ):
             stmt = (
@@ -85,7 +86,8 @@ class TopicExtractionCache(TopicExtractionModel):
 
         elif (
             self.topic_extraction_strategy == TopicExtractionStrategy.mistral
-            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt
+            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt3
+            or self.topic_extraction_strategy == TopicExtractionStrategy.gpt4
             or self.topic_extraction_strategy == TopicExtractionStrategy.llama
         ):
             s = TopicsExtractedCache(
